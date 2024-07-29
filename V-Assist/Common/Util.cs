@@ -9,7 +9,7 @@ namespace VAssist.Common
         internal static void ParseNarrativePointFieldValue(string value, out ulong unixTime, out string? reason)
         {
             var matches = NumberRegex().Matches(value);
-            unixTime = ParseInt(matches[1].Value);
+            unixTime = (ulong) ParseUlong(matches[1].Value);
 
             if (value.Contains("Reason: "))
             {
@@ -21,9 +21,17 @@ namespace VAssist.Common
                 reason = null;
             }
         }
-        internal static ulong ParseInt(string str)
+        internal static ulong? ParseUlong(string str)
         {
-            return ulong.Parse(NumberRegex().Match(str).Value);
+            var match = NumberRegex().Match(str);
+            if (match.Success)
+            {
+                return ulong.Parse(match.Value);
+            }
+            else
+            {
+                return null;
+            }
         }
         internal static List<ulong> MatchNumbers(string str)
         {

@@ -4,15 +4,18 @@ using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Commands.Processors.TextCommands;
 using DSharpPlus.Commands.Processors.TextCommands.Parsing;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using VAssist.Common;
+using VAssist.Services;
 
 namespace VAssist
 {
     internal partial class VAssist
     {
         internal BotConfig Config { get; }
+        internal IServiceCollection Services { get; }
         internal DiscordClient Client { get; }
         internal CommandsExtension Commands { get; }
         internal VAssist(BotConfig? config)
@@ -31,12 +34,13 @@ namespace VAssist
 
             DiscordClientBuilder builder = DiscordClientBuilder.CreateDefault(Config.Token, DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents)
                 .ConfigureLogging(logging => { logging.ClearProviders(); logging.AddSerilog(); })
+                .ConfigureServices(services => services.AddSingleton<NarrativePointTrackerService>())
                 .ConfigureEventHandlers(b => b
                     .HandleGuildAvailable(GuildAvailableEvent)
                     .HandleComponentInteractionCreated(ComponentInteractionCreatedEvent)
                     .HandleModalSubmitted(ModalSubmittedEvent)
-                    .HandleZombied(ZombiedEvent)
-                    );
+                    .HandleZombied(ZombiedEvent));
+
             Client = builder.Build();
 
             Commands = Client.UseCommands(new CommandsConfiguration()

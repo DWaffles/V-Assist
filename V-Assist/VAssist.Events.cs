@@ -1,8 +1,11 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using System.IO;
 using VAssist.Common;
+using VAssist.Services;
 
 namespace VAssist
 {
@@ -15,40 +18,58 @@ namespace VAssist
         }
         internal async Task ComponentInteractionCreatedEvent(DiscordClient client, ComponentInteractionCreatedEventArgs e)
         {
-            if (e.Id == "npt_spend" || e.Id == "npt_add" || e.Id == "npt_end")
+            if (new List<string> { "npt_spend", "npt_add", "npt_end" }.Contains(e.Id)) // split up logic into various functions
             {
                 await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
 
                 var message = e.Message;
                 var embed = new DiscordEmbedBuilder(message.Embeds[0]);
-                var buttonRows = message.Components.Select(row => row.Components.ToList()).ToList();
+
+                if(embed.Fields.Count >= 25)
+                {
+                    await e.Interaction.CreateFollowupMessageAsync(new() { IsEphemeral = true, Content = "Due to Discord limits, this session cannot have any more narrative point changes." });
+                    return;
+                }
+
+                var service = (NarrativePointTrackerService)Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
+                var wrapper = service.ParseNarrativePointTrackerInteraction(e.Message.Components, embed);
 
                 if (e.Id == "npt_spend" || e.Id == "npt_add")
                 {
-                    if (embed.Fields.Count >= 25)
+                    wrapper.ButtonRows.ForEach(row => row.ForEach(button => button = ((DiscordButtonComponent)button).Enable()));
+                    if (e.Id == "npt_spend")
                     {
-                        await e.Interaction.CreateFollowupMessageAsync(new() { IsEphemeral = true, Content = "Due to Discord limits, this session cannot have any more narrative point changes." });
-                        return;
+                        int new_points = wrapper.PartyNarrativePoints - 1;
+                        embed = embed.WithTitle($"Party Narrative Points: {new_points}");
+                        embed.Fields[1].Name = $"Director Points: {wrapper.DirectorNarrativePoints + 1}";
+                        embed = embed.AddField($"{wrapper.PartyNarrativePoints} -> {new_points}", $"By {e.User.Mention} @ <t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:t>", inline: false);
                     }
-                    buttonRows.Last().ForEach(button => button = ((DiscordButtonComponent)button).Enable()); // Enable reason button
-
-                    int points_old = (int)Util.ParseInt(message.Embeds[0].Title ?? "-1"); // get old points
-                    int points_new = string.Equals(e.Id, "npt_spend") ? points_old - 1 : points_old + 1; // get new points
-
-                    embed.WithTitle($"Current Narrative Points: {points_new}"); // set new points
-                    embed.AddField($"{points_old} -> {points_new}", $"By {e.User.Mention} @ <t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:t>"); // add field
+                    else if(e.Id == "npt_add") // Add DirectorId Check
+                    {
+                        if(wrapper.DirectorId != null && wrapper.DirectorId != e.User.Id)
+                        {
+                            await e.Interaction.CreateFollowupMessageAsync(new() { IsEphemeral = true, Content = "You are not the director of the session and cannot add narrative points to the party." });
+                            return;
+                        }
+                        int new_points = wrapper.PartyNarrativePoints + 1;
+                        embed = embed.WithTitle($"Party Narrative Points: {new_points}");
+                        embed.Fields[1].Name = $"Director Points: {wrapper.DirectorNarrativePoints - 1}";
+                        embed = embed.AddField($"{wrapper.PartyNarrativePoints} -> {new_points}", $"By {e.User.Mention} @ <t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:t>", inline: false);
+                    }
                 }
-                else // e.Id == "npt_end"
+                else if(e.Id == "npt_end")
                 {
-                    buttonRows.ForEach(row => row.ForEach(button => button = ((DiscordButtonComponent)button).Disable())); // disable all buttons
+                    wrapper.ButtonRows.ForEach(row => row.ForEach(button => button = ((DiscordButtonComponent)button).Disable()));
                 }
 
                 var webhookBuilder = new DiscordWebhookBuilder()
                     .AddEmbed(embed)
-                    .AddComponents(buttonRows.First())
-                    .AddComponents(buttonRows.Last());
-
+                    .AddComponents(wrapper.ButtonRows.Select(row => new DiscordActionRowComponent(row)));
                 await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+            }
+            else if (e.Id == "npt_bgm" || e.Id == "npt_rgm")
+            {
+
             }
             else if (e.Id == "npt_for")
             {

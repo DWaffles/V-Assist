@@ -3,7 +3,7 @@ using DSharpPlus.Commands.Processors.TextCommands;
 
 namespace VAssist.Commands
 {
-    internal class TextCommands
+    internal class TextModule
     {
         [Command("ping")]
         public static ValueTask PingAsync(TextCommandContext ctx) => ctx.RespondAsync($"Pong! {ctx.Client.GetConnectionLatency(ctx.Guild?.Id ?? 0).TotalMilliseconds} ms.");
