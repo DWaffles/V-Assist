@@ -24,48 +24,36 @@ namespace VAssist
 
                 var message = e.Message;
                 var embed = new DiscordEmbedBuilder(message.Embeds[0]);
+                var service = (NarrativePointTrackerService)Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
 
-                if(embed.Fields.Count >= 25)
+                if (e.Id == "npt_end")
+                {
+                    var webhookBuilder = service.HandlePointTrackerEnd(message);
+                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    return;
+                }
+                else if (service.EmbedMaxFields(embed))
                 {
                     await e.Interaction.CreateFollowupMessageAsync(new() { IsEphemeral = true, Content = "Due to Discord limits, this session cannot have any more narrative point changes." });
                     return;
                 }
-
-                var service = (NarrativePointTrackerService)Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
-                var wrapper = service.ParseNarrativePointTrackerInteraction(e.Message.Components, embed);
-
-                if (e.Id == "npt_spend" || e.Id == "npt_add")
+                else if (e.Id == "npt_spend")
                 {
-                    wrapper.ButtonRows.ForEach(row => row.ForEach(button => button = ((DiscordButtonComponent)button).Enable()));
-                    if (e.Id == "npt_spend")
-                    {
-                        int new_points = wrapper.PartyNarrativePoints - 1;
-                        embed = embed.WithTitle($"Party Narrative Points: {new_points}");
-                        embed.Fields[1].Name = $"Director Points: {wrapper.DirectorNarrativePoints + 1}";
-                        embed = embed.AddField($"{wrapper.PartyNarrativePoints} -> {new_points}", $"By {e.User.Mention} @ <t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:t>", inline: false);
-                    }
-                    else if(e.Id == "npt_add") // Add DirectorId Check
-                    {
-                        if(wrapper.DirectorId != null && wrapper.DirectorId != e.User.Id)
-                        {
-                            await e.Interaction.CreateFollowupMessageAsync(new() { IsEphemeral = true, Content = "You are not the director of the session and cannot add narrative points to the party." });
-                            return;
-                        }
-                        int new_points = wrapper.PartyNarrativePoints + 1;
-                        embed = embed.WithTitle($"Party Narrative Points: {new_points}");
-                        embed.Fields[1].Name = $"Director Points: {wrapper.DirectorNarrativePoints - 1}";
-                        embed = embed.AddField($"{wrapper.PartyNarrativePoints} -> {new_points}", $"By {e.User.Mention} @ <t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:t>", inline: false);
-                    }
+                    var webhookBuilder = service.HandlePointTrackerSpend(message, e.User);
+                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    return;
                 }
-                else if(e.Id == "npt_end")
+                else if(e.Id == "npt_add")
                 {
-                    wrapper.ButtonRows.ForEach(row => row.ForEach(button => button = ((DiscordButtonComponent)button).Disable()));
+                    if(service.TrackerGMCheck())
+                    {
+                        await e.Interaction.CreateFollowupMessageAsync(new() { IsEphemeral = true, Content = "You are not the director of the session and cannot add narrative points to the party." });
+                        return;
+                    }
+                    var webhookBuilder = service.HandlePointTrackerAdd(message, e.User);
+                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    return;
                 }
-
-                var webhookBuilder = new DiscordWebhookBuilder()
-                    .AddEmbed(embed)
-                    .AddComponents(wrapper.ButtonRows.Select(row => new DiscordActionRowComponent(row)));
-                await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
             }
             else if (e.Id == "npt_bgm" || e.Id == "npt_rgm")
             {
