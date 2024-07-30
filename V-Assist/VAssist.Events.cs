@@ -18,15 +18,15 @@ namespace VAssist
         }
         internal async Task ComponentInteractionCreatedEvent(DiscordClient client, ComponentInteractionCreatedEventArgs e)
         {
-            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
-
             var message = e.Message;
             var embed = new DiscordEmbedBuilder(message.Embeds[0]);
             var service = (NarrativePointTrackerService)Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
             
             // convert to switch function?
-            if (new List<string> { "npt_spend", "npt_add", "npt_end" }.Contains(e.Id)) // split up logic into various functions
+            if (new List<string> { "npt_spend", "npt_add", "npt_end", "npt_rgm", "npt_bgm" }.Contains(e.Id)) // split up logic into various functions
             {
+                await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+
                 if (e.Id == "npt_end")
                 {
                     if (service.AllowDirectorAction(message, e.User))
@@ -62,59 +62,45 @@ namespace VAssist
                         await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
                     }
                 }
-            }
-            else if(e.Id == "npt_rgm") // resign director
-            {
-                if (service.AllowDirectorAction(message, e.User))
+                else if (e.Id == "npt_rgm") // resign director
                 {
-                    var webhookBuilder = service.HandleDirectorResign(message);
-                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    if (service.AllowDirectorAction(message, e.User))
+                    {
+                        var webhookBuilder = service.HandleDirectorResign(message);
+                        await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    }
+                    else // don't allow
+                    {
+                        string content = "You are not the director.";
+                        await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    }
                 }
-                else // don't allow
+                else if (e.Id == "npt_bgm") // become director
                 {
-                    string content = "You are not the director.";
-                    await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    if (service.AllowDirectorAction(message, e.User))
+                    {
+                        var webhookBuilder = service.HandleDirectorAssign(message, e.User);
+                        await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    }
+                    else
+                    {
+                        string content = "You cannot become the director.";
+                        await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    }
                 }
             }
-            else if (e.Id == "npt_bgm") // become director
+            
+            if (e.Id == "npt_for")
             {
-                if (service.AllowDirectorAction(message, e.User))
+                var builder = service.HandleAddReason(message, e.User);
+                if(!builder.Components.Any())
                 {
-                    var webhookBuilder = service.HandleDirectorAssign(message, e.User);
-                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    await e.Interaction.CreateFollowupMessageAsync( new() { IsEphemeral = true, Content = "You don't have any changes." });
                 }
                 else
                 {
-                    string content = "You cannot become the director.";
-                    await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, builder);
                 }
-            }
-            else if (e.Id == "npt_for")
-            {
-                var fields = e.Message.Embeds[0].Fields?.ToList();
-                fields.RemoveAt(0);
-                fields = fields.Where(f => f.Value.Contains(e.User.Mention)).ToList();
-                if (fields.Count > 5)
-                {
-                    fields = fields.GetRange(fields.Count - 5, 5);
-                }
-                else if (fields.Count == 0)
-                {
-                    await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, new() { IsEphemeral = true, Content = "You don't have any changes." });
-                    return;
-                }
-
-                var builder = new DiscordInteractionResponseBuilder()
-                    .WithCustomId("modal_npt")
-                    .WithTitle("Add Reason");
-
-                foreach (var field in fields)
-                {
-                    Util.ParseNarrativePointFieldValue(field.Value, out ulong unixTime, out string? reason);
-                    builder.AddComponents(new DiscordTextInputComponent(label: $"{field.Name} by You", customId: unixTime.ToString(), value: reason, required: false));
-                }
-
-                await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, builder);
             }
         }
         internal async Task ModalSubmittedEvent(DiscordClient Client, ModalSubmittedEventArgs e)

@@ -1,5 +1,6 @@
 ﻿using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
+using Newtonsoft.Json.Linq;
 using VAssist.Commands;
 using VAssist.Common;
 using VAssist.Models;
@@ -162,6 +163,43 @@ namespace VAssist.Services
             return new DiscordWebhookBuilder()
                 .AddEmbed(embed)
                 .AddComponents(wrapper.ButtonRows.Select(row => new DiscordActionRowComponent(row)));
+        }
+        internal DiscordInteractionResponseBuilder HandleAddReason(DiscordMessage message, DiscordUser user)
+        {
+            var embed = new DiscordEmbedBuilder(message.Embeds[0]);
+            var wrapper = ParseNarrativePointTrackerInteraction(message.Components, embed);
+
+            var userChanges = wrapper.PointChanges.Where(f => f.Value.Contains(user.Mention)).ToList();
+            if (userChanges.Count > 5)
+            {
+                userChanges = userChanges.GetRange(userChanges.Count - 5, 5);
+            }
+            else if (userChanges.Count == 0)
+            {
+                return new DiscordInteractionResponseBuilder();
+            }
+
+            var builder = new DiscordInteractionResponseBuilder()
+                .WithCustomId("modal_npt")
+                .WithTitle("Add Reason");
+            foreach (var (Name, Value) in userChanges)
+            {
+                ParsePointChangeField(Value, out ulong unixTime, out string? reason);
+                builder.AddComponents(new DiscordTextInputComponent(label: $"{Name} by You", customId: unixTime.ToString(), value: reason, required: false));
+            }
+            return builder;
+        }
+        internal void ParsePointChangeField(string fieldValue, out ulong unixTime, out string? reason)
+        {
+            var matches = Util.MatchNumbers(fieldValue);
+            unixTime = matches[1];
+            reason = null;
+
+            if(fieldValue.Contains("Reason: "))
+            {
+                int index = fieldValue.IndexOf("Reason: ");
+                reason = fieldValue.Substring(index + "Reason: ".Length);
+            }
         }
     }
 }
