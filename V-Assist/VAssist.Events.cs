@@ -18,46 +18,76 @@ namespace VAssist
         }
         internal async Task ComponentInteractionCreatedEvent(DiscordClient client, ComponentInteractionCreatedEventArgs e)
         {
+            await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+
+            var message = e.Message;
+            var embed = new DiscordEmbedBuilder(message.Embeds[0]);
+            var service = (NarrativePointTrackerService)Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
+            
+            // convert to switch function?
             if (new List<string> { "npt_spend", "npt_add", "npt_end" }.Contains(e.Id)) // split up logic into various functions
             {
-                await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
-
-                var message = e.Message;
-                var embed = new DiscordEmbedBuilder(message.Embeds[0]);
-                var service = (NarrativePointTrackerService)Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
-
                 if (e.Id == "npt_end")
                 {
-                    var webhookBuilder = service.HandlePointTrackerEnd(message);
-                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
-                    return;
+                    if (service.AllowDirectorAction(message, e.User))
+                    {
+                        var webhookBuilder = service.HandleTrackerEnd(message);
+                        await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    }
+                    else
+                    {
+                        string content = "You are not the director of the session and cannot end the session.";
+                        await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    }
                 }
-                else if (service.EmbedMaxFields(embed))
+                else if (service.EmbedMaxFields(embed)) // check to see if the embed fields are full before attempting to add a field.
                 {
                     await e.Interaction.CreateFollowupMessageAsync(new() { IsEphemeral = true, Content = "Due to Discord limits, this session cannot have any more narrative point changes." });
-                    return;
                 }
                 else if (e.Id == "npt_spend")
                 {
-                    var webhookBuilder = service.HandlePointTrackerSpend(message, e.User);
+                    var webhookBuilder = service.HandlePointSpend(message, e.User);
                     await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
-                    return;
                 }
                 else if(e.Id == "npt_add")
                 {
-                    if(service.TrackerGMCheck())
+                    if(service.AllowDirectorAction(message, e.User)) // check if the user can add a point
                     {
-                        await e.Interaction.CreateFollowupMessageAsync(new() { IsEphemeral = true, Content = "You are not the director of the session and cannot add narrative points to the party." });
-                        return;
+                        var webhookBuilder = service.HandlePointAdd(message, e.User);
+                        await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
-                    var webhookBuilder = service.HandlePointTrackerAdd(message, e.User);
-                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
-                    return;
+                    else
+                    {
+                        string content = "You are not the director of the session and cannot add narrative points to the party.";
+                        await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    }
                 }
             }
-            else if (e.Id == "npt_bgm" || e.Id == "npt_rgm")
+            else if(e.Id == "npt_rgm") // resign director
             {
-
+                if (service.AllowDirectorAction(message, e.User))
+                {
+                    var webhookBuilder = service.HandleDirectorResign(message);
+                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                }
+                else // don't allow
+                {
+                    string content = "You are not the director.";
+                    await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                }
+            }
+            else if (e.Id == "npt_bgm") // become director
+            {
+                if (service.AllowDirectorAction(message, e.User))
+                {
+                    var webhookBuilder = service.HandleDirectorAssign(message, e.User);
+                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                }
+                else
+                {
+                    string content = "You cannot become the director.";
+                    await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                }
             }
             else if (e.Id == "npt_for")
             {
