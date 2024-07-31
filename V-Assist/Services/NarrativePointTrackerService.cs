@@ -1,7 +1,5 @@
 ﻿using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
-using Newtonsoft.Json.Linq;
-using VAssist.Commands;
 using VAssist.Common;
 using VAssist.Models;
 
@@ -9,7 +7,13 @@ namespace VAssist.Services
 {
     internal class NarrativePointTrackerService
     {
-        internal DiscordEmbed GenerateNewEmbed(SlashCommandContext ctx, int party_points, int total_points, string? session_name = null, DiscordUser? director = null)
+        internal static DiscordComponent[] PointTrackButtonRowOne { get; } = [new DiscordButtonComponent(style: DiscordButtonStyle.Primary, customId: "npt_spend", label: "Spend Point", emoji: new DiscordComponentEmoji("🔽")),
+            new DiscordButtonComponent(style: DiscordButtonStyle.Danger, customId: "npt_add", label: "Add Point [GM]", emoji: new DiscordComponentEmoji("🔼"))];
+        internal static DiscordComponent[] PointTrackButtonRowTwo { get; } = [new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "npt_for", label: "Add Reason", emoji: new DiscordComponentEmoji("🗒️"), disabled: true),
+            new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "npt_end", label: "End Session [GM]", emoji: new DiscordComponentEmoji("⏹️"))];
+        internal static DiscordButtonComponent Button_NPT_BecomeDirector { get; } = new(style: DiscordButtonStyle.Secondary, customId: "npt_bgm", label: "Become GM");
+        internal static DiscordButtonComponent Button_NPT_ResignDirector { get; } = new(style: DiscordButtonStyle.Secondary, customId: "npt_rgm", label: "Resign GM");
+        internal DiscordEmbed GetNewEmbed(SlashCommandContext ctx, int party_points, int total_points, string? session_name = null, DiscordUser? director = null)
         {
             return new DiscordEmbedBuilder()
                 .WithAuthor(name: session_name == null ? "Narrative Point Tracker" : $"Session {session_name}", iconUrl: ctx.Client.CurrentUser.AvatarUrl)
@@ -20,6 +24,31 @@ namespace VAssist.Services
                 .WithTimestamp(DateTime.Now)
                 .WithColor(new DiscordColor("bc2019"))
                 .Build();
+        }
+        internal List<DiscordActionRowComponent> GetComponents(DiscordUser? director)
+        {
+            var directorRow = new List<DiscordButtonComponent>()
+            {
+                director is null ? Button_NPT_BecomeDirector : Button_NPT_ResignDirector
+            };
+            return
+            [
+                new(PointTrackButtonRowOne),
+                new(PointTrackButtonRowTwo),
+                new(directorRow),
+            ];
+        }
+        internal bool CheckEmbedMaxFields(DiscordEmbed embed)
+        {
+            return embed.Fields?.Count >= 25;
+        }
+        internal bool CheckDirectorAction(DiscordMessage message, DiscordUser user)
+        {
+            var embed = message.Embeds[0];
+            var dField = embed.Fields.Single(f => f.Name.Contains("Director"));
+            var dIdUtil = Util.ParseUlong(dField.Value);
+
+            return dIdUtil == null || dIdUtil == user.Id;
         }
         internal NarrativePointTrackerModel ParseNarrativePointTrackerInteraction(IEnumerable<DiscordActionRowComponent> components, DiscordEmbed embed) // cut down, condense
         {
@@ -38,24 +67,24 @@ namespace VAssist.Services
                 DirectorId = director,
                 PartyNarrativePoints = partyNarrativePoints,
                 DirectorNarrativePoints = directoryNarrativePoints,
-                InitialPoints = (initialField.Name, initialField.Value), 
-                PointChanges = fields.Select(f => (f.Name, f.Value)).ToList(),
+                InitialPoints = (initialField.Name, initialField.Value),
                 ButtonRows = components.Select(row => row.Components.ToList()).ToList() // buttons
             };
         }
-        internal bool EmbedMaxFields(DiscordEmbed embed)
+        internal void ParsePointChangeField(string fieldValue, out ulong unixTime, out string? reason)
         {
-            return embed.Fields?.Count >= 25;
-        }
-        internal bool AllowDirectorAction(DiscordMessage message, DiscordUser user)
-        {
-            var embed = message.Embeds[0];
-            var dField = embed.Fields.Single(f => f.Name.Contains("Director"));
-            var dIdUtil = Util.ParseUlong(dField.Value);
+            var matches = Util.MatchNumbers(fieldValue);
+            unixTime = matches.Count >= 2 ? matches[1] : 0;
+            reason = null;
 
-            return dIdUtil == null || dIdUtil == user.Id;
+            if (fieldValue.Contains("Reason: "))
+            {
+                int index = fieldValue.IndexOf("Reason: ");
+                reason = fieldValue[(index + "Reason: ".Length)..];
+            }
         }
-        internal DiscordEmbedBuilder ModifyTrackerEmbed(DiscordEmbedBuilder embed, DiscordUser user, int old_points, int new_points, int director_points)
+
+        internal DiscordEmbedBuilder ModifyTrackerPoints(DiscordEmbedBuilder embed, DiscordUser user, int old_points, int new_points, int director_points)
         {
             embed.Fields[1].Name = $"Director Points: {director_points}";
             return embed.WithTitle($"Party Narrative Points: {new_points}")
@@ -68,9 +97,9 @@ namespace VAssist.Services
             wrapper.ButtonRows.ForEach(row => row.ForEach(button => button = ((DiscordButtonComponent)button).Enable()));
 
             int old_points = wrapper.PartyNarrativePoints;
-            int new_points = old_points-1;
+            int new_points = old_points - 1;
             int director_points = wrapper.DirectorNarrativePoints + 1;
-            embed = ModifyTrackerEmbed(embed, user, old_points, new_points, director_points);
+            embed = ModifyTrackerPoints(embed, user, old_points, new_points, director_points);
 
             if (new_points <= 0)
             {
@@ -95,7 +124,7 @@ namespace VAssist.Services
             int old_points = wrapper.PartyNarrativePoints;
             int new_points = old_points + 1;
             int director_points = wrapper.DirectorNarrativePoints - 1;
-            embed = ModifyTrackerEmbed(embed, user, old_points, new_points, director_points);
+            embed = ModifyTrackerPoints(embed, user, old_points, new_points, director_points);
 
             if ((wrapper.DirectorNarrativePoints - 1) <= 0)
             {
@@ -128,17 +157,16 @@ namespace VAssist.Services
 
             var field = embed.Fields.Single(f => f.Name.Contains("Director"));
             field.Value = user.Mention;
-            
+
             foreach (var row in wrapper.ButtonRows)
             {
                 var index = row.FindIndex(0, match => match.CustomId == "npt_bgm");
                 if (index != -1)
                 {
-                    row[index] = NarrativePointTrackerCommands.Button_NPT_ResignDirector;
+                    row[index] = Button_NPT_ResignDirector;
                 }
             }
 
-            Console.WriteLine($"1found {wrapper.ButtonRows[2][0].CustomId}");
             return new DiscordWebhookBuilder()
                 .AddEmbed(embed)
                 .AddComponents(wrapper.ButtonRows.Select(row => new DiscordActionRowComponent(row)));
@@ -156,7 +184,7 @@ namespace VAssist.Services
                 var index = row.FindIndex(0, match => match.CustomId == "npt_rgm");
                 if (index != -1)
                 {
-                    row[index] = NarrativePointTrackerCommands.Button_NPT_BecomeDirector;
+                    row[index] = Button_NPT_BecomeDirector;
                 }
             }
 
@@ -169,7 +197,7 @@ namespace VAssist.Services
             var embed = new DiscordEmbedBuilder(message.Embeds[0]);
             var wrapper = ParseNarrativePointTrackerInteraction(message.Components, embed);
 
-            var userChanges = wrapper.PointChanges.Where(f => f.Value.Contains(user.Mention)).ToList();
+            var userChanges = embed.Fields.Where(f => f.Value.Contains(user.Mention)).Select(f => (f.Name, f.Value)).ToList();
             if (userChanges.Count > 5)
             {
                 userChanges = userChanges.GetRange(userChanges.Count - 5, 5);
@@ -189,17 +217,32 @@ namespace VAssist.Services
             }
             return builder;
         }
-        internal void ParsePointChangeField(string fieldValue, out ulong unixTime, out string? reason)
+        internal DiscordWebhookBuilder HandleTrackerModal(DiscordMessage message, DiscordUser user, IReadOnlyDictionary<string, string> modalValues)
         {
-            var matches = Util.MatchNumbers(fieldValue);
-            unixTime = matches[1];
-            reason = null;
+            var embed = new DiscordEmbedBuilder(message.Embeds[0]);
+            var wrapper = ParseNarrativePointTrackerInteraction(message.Components, embed);
 
-            if(fieldValue.Contains("Reason: "))
+            foreach (var field in embed.Fields)
             {
-                int index = fieldValue.IndexOf("Reason: ");
-                reason = fieldValue.Substring(index + "Reason: ".Length);
+                ParsePointChangeField(field.Value, out ulong unixTime, out string? reason);
+
+                if (unixTime != 0 && modalValues.ContainsKey(unixTime.ToString()))
+                {
+                    string? testVal = modalValues[unixTime.ToString()];
+                    if (string.IsNullOrEmpty(testVal))
+                    {
+                        field.Value = $"By {user.Mention} @ <t:{unixTime}:t>";
+                    }
+                    else
+                    {
+                        field.Value = $"By {user.Mention} @ <t:{unixTime}:t>. Reason: {testVal}";
+                    }
+                }
             }
+
+            return new DiscordWebhookBuilder()
+                .AddEmbed(embed)
+                .AddComponents(wrapper.ButtonRows.Select(row => new DiscordActionRowComponent(row)));
         }
     }
 }
