@@ -13,14 +13,17 @@ namespace VAssist.Services
             new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "npt_end", label: "End Session [GM]", emoji: new DiscordComponentEmoji("⏹️"))];
         internal static DiscordButtonComponent Button_NPT_BecomeDirector { get; } = new(style: DiscordButtonStyle.Secondary, customId: "npt_bgm", label: "Become GM");
         internal static DiscordButtonComponent Button_NPT_ResignDirector { get; } = new(style: DiscordButtonStyle.Secondary, customId: "npt_rgm", label: "Resign GM");
+        
+        // UNDO BUTTON
+        // NEW SESSION BUTTON
         internal DiscordEmbed GetNewEmbed(SlashCommandContext ctx, int party_points, int total_points, string? session_name = null, DiscordUser? director = null)
         {
             return new DiscordEmbedBuilder()
-                .WithAuthor(name: session_name == null ? "Narrative Point Tracker" : $"Session {session_name}", iconUrl: ctx.Client.CurrentUser.AvatarUrl)
+                .WithAuthor(name: session_name == null ? "Narrative Point Tracker" : $"{session_name}", iconUrl: ctx.Client.CurrentUser.AvatarUrl)
                 .WithTitle($"Party Narrative Points: {party_points}")
                 .AddField($"Initial Points: {party_points}", $"By {ctx.User.Mention} @ <t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:t>", inline: true)
                 .AddField($"Director Points: {total_points - party_points}", director is null ? "Not Assigned" : director.Mention, inline: true)
-                .WithFooter(text: ctx.Client.CurrentUser.Username)
+                .WithFooter(text: ctx.Client.CurrentUser.Username) // current point changes 0/23
                 .WithTimestamp(DateTime.Now)
                 .WithColor(new DiscordColor("bc2019"))
                 .Build();
