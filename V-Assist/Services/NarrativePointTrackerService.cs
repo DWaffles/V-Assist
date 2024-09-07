@@ -49,7 +49,7 @@ namespace VAssist.Services
         {
             var embed = message.Embeds[0];
             var dField = embed.Fields.Single(f => f.Name.Contains("Director"));
-            var dIdUtil = Util.ParseUlong(dField.Value);
+            var dIdUtil = Util.ParseUlongOrNull(dField.Value);
 
             return dIdUtil == null || dIdUtil == user.Id;
         }
@@ -58,9 +58,9 @@ namespace VAssist.Services
             var initialField = embed.Fields.Single(f => f.Name.Contains("Initial"));
             var directorField = embed.Fields.Single(f => f.Name.Contains("Director"));
 
-            ulong? director = Util.ParseUlong(directorField.Value); // director ID
-            int partyNarrativePoints = (int)Util.ParseUlong(embed.Title); // party points // does not handle negative points
-            int directoryNarrativePoints = (int)Util.ParseUlong(directorField.Name); // director points // does not handle negative points
+            ulong? director = Util.ParseUlongOrNull(directorField.Value); // director ID
+            int partyNarrativePoints = (int)Util.ParseUlongOrNull(embed.Title); // party points // does not handle negative points
+            int directoryNarrativePoints = (int)Util.ParseUlongOrNull(directorField.Name); // director points // does not handle negative points
 
             var fields = embed.Fields.ToList(); // fields
             fields.RemoveRange(0, 2);
