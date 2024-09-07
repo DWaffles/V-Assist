@@ -2,11 +2,6 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VAssist.Services;
 
 namespace VAssist
@@ -17,7 +12,7 @@ namespace VAssist
         {
             var message = e.Message;
             var embed = new DiscordEmbedBuilder(message.Embeds[0]);
-            var service = (NarrativePointTrackerService) Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
+            var service = (NarrativePointTrackerService)Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
 
             switch (e.Id) // split up logic into various functions // npt
             {
@@ -114,13 +109,13 @@ namespace VAssist
         {
             var message = e.Message;
             var embed = new DiscordEmbedBuilder(message.Embeds[0]);
-            var service = (TurnTrackerService) Client.ServiceProvider.GetRequiredService(typeof(TurnTrackerService));
+            var service = (TurnTrackerService)Client.ServiceProvider.GetRequiredService(typeof(TurnTrackerService));
 
             switch (e.Id) // tts
             {
                 case "tts_dropdown":
                     await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
-                    
+
                     var webhookBuilder = service.HandleTeamChange(message, e.User, e.Values.First());
                     await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
 

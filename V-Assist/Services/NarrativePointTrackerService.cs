@@ -13,7 +13,7 @@ namespace VAssist.Services
             new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "npt_end", label: "End Session [GM]", emoji: new DiscordComponentEmoji("⏹️"))];
         internal static DiscordButtonComponent Button_NPT_BecomeDirector { get; } = new(style: DiscordButtonStyle.Secondary, customId: "npt_bgm", label: "Become GM");
         internal static DiscordButtonComponent Button_NPT_ResignDirector { get; } = new(style: DiscordButtonStyle.Secondary, customId: "npt_rgm", label: "Resign GM");
-        
+
         // UNDO BUTTON
         // NEW SESSION BUTTON
         internal DiscordEmbed GetNewEmbed(SlashCommandContext ctx, int party_points, int total_points, string? session_name = null, DiscordUser? director = null)

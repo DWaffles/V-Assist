@@ -1,11 +1,5 @@
 ﻿using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using VAssist.Common;
 using VAssist.Trackers;
 
@@ -46,7 +40,7 @@ namespace VAssist.Services
                 .WithAuthor(name: "Turn Tracker Tracker", iconUrl: ctx.Client.CurrentUser.AvatarUrl)
                 .AddField("Current Controller", "Not Assigned", inline: true)
                 .AddField("Director", (director?.Mention ?? "Not Assigned"), inline: true)
-                .AddField("Rotation History (Turn 1)", "New turn", inline:false)
+                .AddField("Rotation History (Turn 1)", "New turn", inline: false)
                 .WithFooter(text: ctx.Client.CurrentUser.Username + " • TTS v1.0")
                 .WithTimestamp(DateTime.Now)
                 .WithColor(new DiscordColor("bc2019"));
@@ -76,7 +70,7 @@ namespace VAssist.Services
             var options = new List<DiscordSelectComponentOption>();
             for (int i = 0; i < num_teams && i < DefaultTeamNames.Count; i++)
             {
-                options.Add(new (label: $"Join {DefaultTeamNames[i]}", value: $"tts_dropdown_{i}"));
+                options.Add(new(label: $"Join {DefaultTeamNames[i]}", value: $"tts_dropdown_{i}"));
             }
             options.Add(new(label: $"Leave team", value: $"tts_dropdown_leave"));
             var dropdown = new DiscordSelectComponent(customId: "tts_dropdown", placeholder: "Players, join a team.", options, disabled: false, minOptions: 0, maxOptions: 1);
@@ -126,7 +120,7 @@ namespace VAssist.Services
         internal List<TurnTrackerTeamModel> ParseTurnTrackerTeams(List<DiscordEmbedField> teamFields)
         {
             var list = new List<TurnTrackerTeamModel>(); // create a variable to hold all of the teams in the embed
-            foreach(var field in teamFields)
+            foreach (var field in teamFields)
             {
                 var characters = field.Value.Equals("Empty") // check to see if the team has any characters
                     ? [] // if there are no characters
@@ -149,14 +143,14 @@ namespace VAssist.Services
         {
             // Check to see if the string contains a mention
             // If it does, it is a player character, otherwise, an NPC of director control
-            bool mention = Util.TryParseMention(str, out ulong id); 
+            bool mention = Util.TryParseMention(str, out ulong id);
             var reactions = Util.MatchNumbers(str[str.LastIndexOf('[')..str.LastIndexOf(']')]); // parse all the numbers in the reaction section
             return new()
             {
                 CharacterName = mention ? null : str[str.IndexOf("**")..str.LastIndexOf("**")], // Character Name
                 PlayerID = mention ? id : null, // player ID
-                ReactionsAvailable = (int) reactions.First(),
-                ReactionsTotal = (int) reactions.Last(),
+                ReactionsAvailable = (int)reactions.First(),
+                ReactionsTotal = (int)reactions.Last(),
                 TurnAvailable = str.Contains(Green) || str.Contains(Blue),
             };
         }
@@ -172,16 +166,16 @@ namespace VAssist.Services
             var embed = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an embed builder to be able to edit it
             var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker
 
-            for(int i = 0; i < turnTracker.Teams.Count; i++) // Remove the user from all other teams they may be apart of
+            for (int i = 0; i < turnTracker.Teams.Count; i++) // Remove the user from all other teams they may be apart of
             {
                 var userCharacters = turnTracker.Teams[i].Characters.Where(ch => ch.PlayerID != null && ch.PlayerID.Equals(user.Id)).ToList();
                 foreach (var character in userCharacters) // remove any found characters of this user.
                 {
-                    turnTracker.Teams[i].Characters.Remove(character); 
+                    turnTracker.Teams[i].Characters.Remove(character);
                 }
             }
 
-            if(!optionId.Equals("tts_dropdown_leave")) // The user has chosen to sign up for a specific team
+            if (!optionId.Equals("tts_dropdown_leave")) // The user has chosen to sign up for a specific team
             {
                 int teamPos = Util.ParseInt(optionId); // get the position/index of the team the user wishes to choice
                 var team = turnTracker.Teams[teamPos]; // grab the team
@@ -196,7 +190,7 @@ namespace VAssist.Services
                 });
             }
 
-            foreach(var team in turnTracker.Teams) // Update the embed with the updated values
+            foreach (var team in turnTracker.Teams) // Update the embed with the updated values
             {
                 var field = embed.Fields.Single(field => field.Name.Equals(team.TeamName));
                 field.Value = team.ToString();

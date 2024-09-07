@@ -33,13 +33,13 @@ namespace VAssist
                 .CreateLogger();
 
             DiscordClientBuilder builder = DiscordClientBuilder.CreateDefault(Config.Token, DiscordIntents.AllUnprivileged | DiscordIntents.MessageContents)
-                .ConfigureLogging(logging => 
+                .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();
                     logging.AddSerilog();
                 })
-                .ConfigureServices(services => 
-                { 
+                .ConfigureServices(services =>
+                {
                     services.AddSingleton<NarrativePointTrackerService>();
                     services.AddSingleton<TurnTrackerService>();
                 })

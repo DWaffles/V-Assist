@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VAssist.Services;
+﻿using VAssist.Services;
 
 namespace VAssist.Trackers
 {
@@ -40,7 +35,7 @@ namespace VAssist.Trackers
         public override string ToString()
         {
             string str = string.Empty;
-            if(TurnAvailable)
+            if (TurnAvailable)
             {
                 if (ReactionsAvailable > 0)
                     str += TurnTrackerService.Green;
