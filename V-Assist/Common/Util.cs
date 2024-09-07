@@ -6,7 +6,7 @@ namespace VAssist.Common
     {
         [GeneratedRegex(@"\d+")]
         private static partial Regex NumberRegex();
-        [GeneratedRegex(@"<@\d{17,18}>")]
+        [GeneratedRegex(@"<@\d{17,19}>")] // Discord snowflakes can be up to 19 characters long
         private static partial Regex MentionRegex();
         internal static ulong ParseUlong(string str)
         {

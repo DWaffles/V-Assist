@@ -7,7 +7,8 @@ namespace VAssist.Services
 {
     internal class NarrativePointTrackerService
     {
-        internal static DiscordComponent[] PointTrackButtonRowOne { get; } = [new DiscordButtonComponent(style: DiscordButtonStyle.Primary, customId: "npt_spend", label: "Spend Point", emoji: new DiscordComponentEmoji("🔽")),
+        internal static DiscordComponent[] PointTrackButtonRowOne { get; } = [
+            new DiscordButtonComponent(style: DiscordButtonStyle.Primary, customId: "npt_spend", label: "Spend Point", emoji: new DiscordComponentEmoji("🔽")),
             new DiscordButtonComponent(style: DiscordButtonStyle.Danger, customId: "npt_add", label: "Add Point [GM]", emoji: new DiscordComponentEmoji("🔼"))];
         internal static DiscordComponent[] PointTrackButtonRowTwo { get; } = [new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "npt_for", label: "Add Reason", emoji: new DiscordComponentEmoji("🗒️"), disabled: true),
             new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "npt_end", label: "End Session [GM]", emoji: new DiscordComponentEmoji("⏹️"))];

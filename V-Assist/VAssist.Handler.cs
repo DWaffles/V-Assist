@@ -114,17 +114,48 @@ namespace VAssist
             switch (e.Id) // tts
             {
                 case "tts_dropdown":
+                    {
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+                        var webhookBuilder = service.HandleTeamChange(message, e.User, e.Values.First());
+                        await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    }
+                    break;
+                case "tts_button_turn":
                     await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
 
-                    var webhookBuilder = service.HandleTeamChange(message, e.User, e.Values.First());
-                    await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    if (false) //check controller status?
+                    {
 
+                    }
+                    else if (service.UserHasCharacter(message, e.User)) // Check if user is in a team
+                    {
+                        var webhookBuilder = service.HandleTurnToggle(message, e.User);
+                        await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    }
+                    else
+                    {
+                        string content = "You do not have a character for this Turn Tracker.";
+                        await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    }
+                    break;
+                case "tts_button_reaction_cycle":
+                    goto case "tts_button_reaction_max";
+                case "tts_button_reaction_max":
+                    await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+
+                    if (service.UserHasCharacter(message, e.User)) // Check if user is in a team
+                    {
+                        var webhookBuilder = service.HandleReactionCycle(message, e.User, e.Id);
+                        await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    }
+                    else
+                    {
+                        string content = "You do not have a character for this Turn Tracker.";
+                        await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    }
                     break;
                 default:
                     throw new NotSupportedException();
-                    // rem_Not
-                    // 1234
-                    // 0123
             }
         }
     }

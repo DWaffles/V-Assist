@@ -4,16 +4,16 @@ namespace VAssist.Trackers
 {
     internal class TurnTrackerModel
     {
-        internal required ulong DirectorId { get; init; }
-        internal required ulong? ControllerId { get; init; } = null;
-        internal required int TurnNumber { get; init; }
-        internal required string RotationHistory { get; init; }
+        internal required ulong DirectorId { get; set; }
+        internal required ulong? ControllerId { get; set; } = null;
+        internal required int TurnNumber { get; set; }
+        internal required string RotationHistory { get; set; }
         internal required string TrackerVersion { get; init; }
         internal List<TurnTrackerTeamModel> Teams { get; init; } = [];
     }
     internal class TurnTrackerTeamModel
     {
-        internal required string TeamName { get; init; }
+        internal required string TeamName { get; set; }
         internal required List<TurnTrackerCharacterModel> Characters { get; init; } = [];
         public override string ToString()
         {
@@ -27,9 +27,9 @@ namespace VAssist.Trackers
     {
         internal required string? CharacterName { get; init; }
         internal required ulong? PlayerID { get; init; }
-        internal required int ReactionsAvailable { get; init; }
-        internal required int ReactionsTotal { get; init; }
-        internal required bool TurnAvailable { get; init; }
+        internal required int ReactionsAvailable { get; set; }
+        internal required int ReactionsMax { get; set; }
+        internal required bool TurnAvailable { get; set; }
         public override string ToString()
         {
             string str = string.Empty;
@@ -49,7 +49,7 @@ namespace VAssist.Trackers
             }
             str += " ";
             str += CharacterName is null ? $"<@{PlayerID}>" : CharacterName;
-            str += $" [{ReactionsAvailable}/{ReactionsTotal}]";
+            str += $" [{ReactionsAvailable}/{ReactionsMax}]";
             return str;
         }
     }
