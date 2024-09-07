@@ -57,7 +57,7 @@ namespace VAssist.Services
             embed.AddField("Current Action", "N/A"); // TBD
             return embed.Build();
         }
-        internal List<DiscordActionRowComponent> GetActionRowComponents(int num_teams)
+        internal static List<DiscordActionRowComponent> GetActionRowComponents(int num_teams)
         {
             // 1st : Turn Buttons (?) // Reaction Buttons // OR Button: Join Team A, B, C, etc, Toggle Reaction, Cycle Reaction Amount
             // 2nd : Join Team Dropdown
@@ -85,12 +85,12 @@ namespace VAssist.Services
         /// </summary>
         /// <param name="embed"></param>
         /// <returns>A <see cref="TurnTrackerModel"/>, which represents the changable data of a turn tracker.</returns>
-        internal TurnTrackerModel ParseTurnTracker(DiscordEmbed embed)
+        internal static TurnTrackerModel ParseTurnTracker(DiscordEmbed embed)
         {
             // Create a variable that will only hold the fields referring to teams of characters
             var team_fields = embed.Fields?.ToList() ?? [];
 
-            // From the embed, get the fields that we need to extract the value for.
+            // From the builder, get the fields that we need to extract the value for.
             var director_field = team_fields.First(f => f.Name.Equals("Director"));
             var controller_field = team_fields.First(f => f.Name.Equals("Current Controller"));
             var rotation_field = team_fields.First(f => f.Name.StartsWith("Rotation History"));
@@ -117,9 +117,9 @@ namespace VAssist.Services
         /// </summary>
         /// <param name="teamFields">A <see cref="List{DiscordEmbedField}"/> of the team fields from the turn tracker to pass.</param>
         /// <returns>A <see cref="List{TurnTrackerModel}"/> constructed from the team fields.</returns>
-        internal List<TurnTrackerTeamModel> ParseTurnTrackerTeams(List<DiscordEmbedField> teamFields)
+        internal static List<TurnTrackerTeamModel> ParseTurnTrackerTeams(List<DiscordEmbedField> teamFields)
         {
-            var list = new List<TurnTrackerTeamModel>(); // create a variable to hold all of the teams in the embed
+            var list = new List<TurnTrackerTeamModel>(); // create a variable to hold all of the teams in the builder
             foreach (var field in teamFields)
             {
                 var characters = field.Value.Equals("Empty") // check to see if the team has any characters
@@ -135,11 +135,11 @@ namespace VAssist.Services
             return list;
         }
         /// <summary>
-        /// Parse a <see cref="TurnTrackerCharacterModel"/> from a <see cref="string"/> line under a team field in a turn tracker embed.
+        /// Parse a <see cref="TurnTrackerCharacterModel"/> from a <see cref="string"/> line under a team field in a turn tracker builder.
         /// </summary>
         /// <param name="str">The <see cref="string"/> to parse.</param>
         /// <returns>The parsed <see cref="TurnTrackerCharacterModel"/>.</returns>
-        internal TurnTrackerCharacterModel ParseTurnTrackerCharacter(string str)
+        internal static TurnTrackerCharacterModel ParseTurnTrackerCharacter(string str)
         {
             // Check to see if the string contains a mention
             // If it does, it is a player character, otherwise, an NPC of director control
@@ -163,9 +163,29 @@ namespace VAssist.Services
         /// <returns>A <see cref="DiscordWebhookBuilder"/> of the updated Turn Tracker and <see cref="DiscordComponent"/>s.</returns>
         internal DiscordWebhookBuilder HandleTeamChange(DiscordMessage message, DiscordUser user, string optionId)
         {
-            var embed = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an embed builder to be able to edit it
+            var builder = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an builder builder to be able to edit it
             var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker
 
+            RemovePlayerCharacterFromTeams(user, turnTracker);
+
+            if (!optionId.Equals("tts_dropdown_leave")) // The user has chosen to sign up for a specific team
+            {
+                AddPlayerCharacterToTeam(user, turnTracker, optionId);
+            }
+
+            UpdateTurnTracker(builder, turnTracker);
+
+            return new DiscordWebhookBuilder()
+               .AddEmbed(builder)
+               .AddComponents(message.Components);
+        }
+        /// <summary>
+        /// Remove a <see cref="DiscordUser"/> from all the teams in a Turn Tracker.
+        /// </summary>
+        /// <param name="user">The <see cref="DiscordUser"/> to remove.</param>
+        /// <param name="turnTracker">The Turn Tracker to modify.</param>
+        internal static void RemovePlayerCharacterFromTeams(DiscordUser user, TurnTrackerModel turnTracker)
+        {
             for (int i = 0; i < turnTracker.Teams.Count; i++) // Remove the user from all other teams they may be apart of
             {
                 var userCharacters = turnTracker.Teams[i].Characters.Where(ch => ch.PlayerID != null && ch.PlayerID.Equals(user.Id)).ToList();
@@ -174,31 +194,39 @@ namespace VAssist.Services
                     turnTracker.Teams[i].Characters.Remove(character);
                 }
             }
+        }
+        /// <summary>
+        /// Adds a <see cref="DiscordUser"/> to a team in a Turn Tracker.
+        /// </summary>
+        /// <param name="user">The <see cref="DiscordUser"/> to add,</param>
+        /// <param name="turnTracker">The Turn Tracker to modify.</param>
+        /// <param name="optionId">The Id of the interacting <see cref="DiscordSelectComponentOption"/> dropdown option.</param>
+        internal static void AddPlayerCharacterToTeam(DiscordUser user, TurnTrackerModel turnTracker, string optionId)
+        {
+            int teamPos = Util.ParseInt(optionId); // get the position/index of the team the user wishes to choice
+            var team = turnTracker.Teams[teamPos]; // grab the team
 
-            if (!optionId.Equals("tts_dropdown_leave")) // The user has chosen to sign up for a specific team
+            team.Characters.Add(new() // add the user with base values
             {
-                int teamPos = Util.ParseInt(optionId); // get the position/index of the team the user wishes to choice
-                var team = turnTracker.Teams[teamPos]; // grab the team
-
-                team.Characters.Add(new() // add the user with base values
-                {
-                    CharacterName = null,
-                    PlayerID = user.Id,
-                    ReactionsAvailable = 1,
-                    ReactionsTotal = 1,
-                    TurnAvailable = true
-                });
-            }
-
-            foreach (var team in turnTracker.Teams) // Update the embed with the updated values
+                CharacterName = null,
+                PlayerID = user.Id,
+                ReactionsAvailable = 1,
+                ReactionsTotal = 1,
+                TurnAvailable = true
+            });
+        }
+        /// <summary>
+        /// Updates the various changable fields in TurnTracker.
+        /// </summary>
+        /// <param name="builder">The <see cref="DiscordEmbedBuilder"/> representation of the Turn Tracker to update.</param>
+        /// <param name="turnTracker">The Turn Tracker to update from.</param>
+        internal static void UpdateTurnTracker(DiscordEmbedBuilder builder, TurnTrackerModel turnTracker)
+        {
+            foreach (var team in turnTracker.Teams) // Update the teams with the updated values
             {
-                var field = embed.Fields.Single(field => field.Name.Equals(team.TeamName));
+                var field = builder.Fields.Single(field => field.Name.Equals(team.TeamName));
                 field.Value = team.ToString();
             }
-
-            return new DiscordWebhookBuilder()
-               .AddEmbed(embed)
-               .AddComponents(message.Components);
         }
     }
 }

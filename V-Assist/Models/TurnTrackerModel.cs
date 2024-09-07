@@ -8,9 +8,7 @@ namespace VAssist.Trackers
         internal required ulong? ControllerId { get; init; } = null;
         internal required int TurnNumber { get; init; }
         internal required string RotationHistory { get; init; }
-        //internal required string Action { get; init; }
         internal required string TrackerVersion { get; init; }
-
         internal List<TurnTrackerTeamModel> Teams { get; init; } = [];
     }
     internal class TurnTrackerTeamModel
