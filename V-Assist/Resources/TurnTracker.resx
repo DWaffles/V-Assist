@@ -156,6 +156,15 @@
   <data name="LeaveTeamOptionLabel" xml:space="preserve">
     <value>Leave Team</value>
   </data>
+  <data name="NewNPCModalComponentLabel" xml:space="preserve">
+    <value>Non-Player Character Name:</value>
+  </data>
+  <data name="NewNPCModalComponentPlaceholder" xml:space="preserve">
+    <value>Name...</value>
+  </data>
+  <data name="NewNPCModalTitle" xml:space="preserve">
+    <value>Add New Non-Player Characters</value>
+  </data>
   <data name="OrangeDescription" xml:space="preserve">
     <value>Turn unavailable, reaction available.</value>
   </data>

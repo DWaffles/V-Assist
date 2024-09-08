@@ -158,11 +158,15 @@ namespace VAssist.Services
         {
             var response = new DiscordInteractionResponseBuilder()
                 .WithCustomId($"tts_modal_director_characters_{Util.ParseInt(optionId)}")
-                .WithTitle("Add New Non-Player Characters");
+                .WithTitle(Resources.TurnTracker.NewNPCModalTitle);
 
             for (int i = 0; i < 5; i++)
             {
-                response.AddComponents(new DiscordTextInputComponent(label: $"Non-Player Character Name:", customId: $"{i}", placeholder: "Name...", required: false));
+                response.AddComponents(new DiscordTextInputComponent(
+                    label: Resources.TurnTracker.NewNPCModalComponentLabel,
+                    customId: $"{i}",
+                    placeholder: Resources.TurnTracker.NewNPCModalComponentPlaceholder,
+                    required: false));
             }
 
             return response;

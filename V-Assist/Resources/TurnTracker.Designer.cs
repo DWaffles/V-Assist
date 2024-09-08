@@ -178,6 +178,33 @@ namespace VAssist.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Non-Player Character Name:.
+        /// </summary>
+        internal static string NewNPCModalComponentLabel {
+            get {
+                return ResourceManager.GetString("NewNPCModalComponentLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name....
+        /// </summary>
+        internal static string NewNPCModalComponentPlaceholder {
+            get {
+                return ResourceManager.GetString("NewNPCModalComponentPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add New Non-Player Characters.
+        /// </summary>
+        internal static string NewNPCModalTitle {
+            get {
+                return ResourceManager.GetString("NewNPCModalTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Turn unavailable, reaction available..
         /// </summary>
         internal static string OrangeDescription {
