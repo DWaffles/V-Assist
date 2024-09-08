@@ -58,11 +58,11 @@ namespace VAssist.Services
                                 $"\n{Blue} = Turn available, reaction unavailable." +
                                 $"\n{Orange} = Turn unavailable, reaction available." +
                                 $"\n{Red} = Turn, reaction unavailable.", inline: false);
-            embed.AddField("Current Action", "N/A"); // TBD
+            embed.AddField("Director Controlled Character", "None Selected"); // TBD
             return embed.Build();
         }
         /// <summary>
-        /// Checks to see if a <see cref="DiscordUser"/> is a part of any team on the Turn Tracker.
+        /// Checks to see if a <see cref="DiscordUser"/> is a part of any team on the Turn Tracker associated with the <see cref="DiscordMessage"/>.
         /// </summary>
         /// <param name="message">The Turn Tracker to perform the check on.</param>
         /// <param name="user">The <see cref="DiscordUser"/> to perform the check on.</param>
@@ -73,13 +73,24 @@ namespace VAssist.Services
             return turnTracker.Teams.Exists(team => team.Characters.Exists(cha => cha.PlayerID != null && cha.PlayerID.Equals(user.Id)));
         }
         /// <summary>
+        /// Checks to see if a <see cref="DiscordUser"/> is the director for the Turn Tracker associated with the <see cref="DiscordMessage"/>.
+        /// </summary>
+        /// <param name="message">A <see cref="DiscordMessage"/> with a Turn Tracker embed.</param>
+        /// <param name="user">The <see cref="DiscordUser"/> to check director status for.</param>
+        /// <returns></returns>
+        internal bool UserIsDirector(DiscordMessage message, DiscordUser user)
+        {
+            var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker
+            return turnTracker.DirectorId.Equals(user.Id);
+        }
+        /// <summary>
         /// Function to handle changing the team of a player cha for a Turn Tracker.
         /// </summary>
         /// <param name="message">The original <see cref="DiscordMessage"/> of the Turn Tracker <see cref="DiscordEmbed"/>.</param>
         /// <param name="user">The interacting <see cref="DiscordUser"/> to change teams for.</param>
         /// <param name="optionId">The selected option Id the interacting <see cref="DiscordUser"/> chose.</param>
         /// <returns>A <see cref="DiscordWebhookBuilder"/> of the updated Turn Tracker and <see cref="DiscordComponent"/>s.</returns>
-        internal DiscordWebhookBuilder HandleTeamChange(DiscordMessage message, DiscordUser user, string optionId)
+        internal DiscordWebhookBuilder HandlePlayerTeamChange(DiscordMessage message, DiscordUser user, string optionId)
         {
             var builder = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an builder builder to be able to edit it
             var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker
@@ -96,7 +107,7 @@ namespace VAssist.Services
                .AddEmbed(builder)
                .AddComponents(message.Components);
         }
-        internal DiscordWebhookBuilder HandleTurnToggle(DiscordMessage message, DiscordUser user)
+        internal DiscordWebhookBuilder HandlePlayerTurnToggle(DiscordMessage message, DiscordUser user)
         {
             var builder = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an builder builder to be able to edit it
             var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker
@@ -112,7 +123,7 @@ namespace VAssist.Services
                .AddEmbed(builder)
                .AddComponents(message.Components);
         }
-        internal DiscordWebhookBuilder HandleReactionCycle(DiscordMessage message, DiscordUser user, string componentId)
+        internal DiscordWebhookBuilder HandlePlayerReactionCycle(DiscordMessage message, DiscordUser user, string componentId)
         {
             var builder = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an builder builder to be able to edit it
             var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker

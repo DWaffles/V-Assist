@@ -24,7 +24,7 @@ namespace VAssist.Services
                 options.Add(new(label: $"Join {DefaultTeamNames[i]}", value: $"tts_dropdown_{i}"));
             }
             options.Add(new(label: $"Leave team", value: $"tts_dropdown_leave"));
-            var dropdown = new DiscordSelectComponent(customId: "tts_dropdown", placeholder: "Players, join a team.", options, disabled: false, minOptions: 0, maxOptions: 1);
+            var dropdown = new DiscordSelectComponent(customId: "tts_dropdown", placeholder: "Players, join a team. Director, add characters to a team.", options, disabled: false, minOptions: 0, maxOptions: 1);
 
             return
             [
@@ -54,7 +54,7 @@ namespace VAssist.Services
             team_fields.Remove(director_field);
             team_fields.Remove(controller_field);
             team_fields.Remove(rotation_field);
-            team_fields.Remove(team_fields.Last(f => f.Name.Equals("Current Action"))); // Current Action is after user named fields, so use Last
+            team_fields.Remove(team_fields.Last(f => f.Name.Equals("Director Controlled Character"))); // Current Action is after user named fields, so use Last
             team_fields.Remove(team_fields.Last(f => f.Name.Equals("Key"))); // Key is after user named fields, so use Last
 
             return new()

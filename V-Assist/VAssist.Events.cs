@@ -16,6 +16,7 @@ namespace VAssist
         }
         internal async Task ComponentInteractionCreatedEvent(DiscordClient client, ComponentInteractionCreatedEventArgs e)
         {
+            Log.Logger.Information($"Processing interaction with component ID: {e.Id} from user: {e.User.Id}");
             if (e.Id.StartsWith("npt"))
                 await HandleNarrativePointTrackerInteractionsAsync(client, e);
             else if (e.Id.StartsWith("tts"))
@@ -23,6 +24,7 @@ namespace VAssist
         }
         internal async Task ModalSubmittedEvent(DiscordClient Client, ModalSubmittedEventArgs e)
         {
+            Log.Logger.Information($"Processing modal submitted with ID: {e.Interaction.Data.CustomId} by user: {e.Interaction.User.Id}");
             if (e.Interaction.Data.CustomId == "modal_npt")
             {
                 await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);

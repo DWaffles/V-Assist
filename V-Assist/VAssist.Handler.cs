@@ -114,22 +114,27 @@ namespace VAssist
             switch (e.Id) // tts
             {
                 case "tts_dropdown":
+                    if (service.UserIsDirector(message, e.User)) //check controller status
+                    {
+
+                    }
+                    else
                     {
                         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
-                        var webhookBuilder = service.HandleTeamChange(message, e.User, e.Values.First());
+                        var webhookBuilder = service.HandlePlayerTeamChange(message, e.User, e.Values.First());
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
                     break;
                 case "tts_button_turn":
                     await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
 
-                    if (false) //check controller status?
+                    if (service.UserIsDirector(message, e.User)) //check controller status
                     {
 
                     }
                     else if (service.UserHasCharacter(message, e.User)) // Check if user is in a team
                     {
-                        var webhookBuilder = service.HandleTurnToggle(message, e.User);
+                        var webhookBuilder = service.HandlePlayerTurnToggle(message, e.User);
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
                     else
@@ -143,9 +148,13 @@ namespace VAssist
                 case "tts_button_reaction_max":
                     await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
 
-                    if (service.UserHasCharacter(message, e.User)) // Check if user is in a team
+                    if (service.UserIsDirector(message, e.User)) //check controller status
                     {
-                        var webhookBuilder = service.HandleReactionCycle(message, e.User, e.Id);
+
+                    }
+                    else if (service.UserHasCharacter(message, e.User)) // Check if user is in a team
+                    {
+                        var webhookBuilder = service.HandlePlayerReactionCycle(message, e.User, e.Id);
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
                     else
