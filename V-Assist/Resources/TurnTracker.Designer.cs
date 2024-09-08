@@ -124,20 +124,20 @@ namespace VAssist.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Director Controlled Character.
+        ///   Looks up a localized string similar to Director Controlled Characters.
         /// </summary>
-        internal static string DirectorCharacterFieldName {
+        internal static string DirectorCharactersFieldName {
             get {
-                return ResourceManager.GetString("DirectorCharacterFieldName", resourceCulture);
+                return ResourceManager.GetString("DirectorCharactersFieldName", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to None Selected.
         /// </summary>
-        internal static string DirectorCharacterFieldValueDefault {
+        internal static string DirectorCharactersFieldValueDefault {
             get {
-                return ResourceManager.GetString("DirectorCharacterFieldValueDefault", resourceCulture);
+                return ResourceManager.GetString("DirectorCharactersFieldValueDefault", resourceCulture);
             }
         }
         

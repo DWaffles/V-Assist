@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02338" />
     <PackageReference Include="DSharpPlus.Commands" Version="5.0.0-nightly-02338" />
+    <PackageReference Include="Humanizer.Core" Version="2.14.1" />
     <PackageReference Include="Serilog" Version="4.0.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
@@ -23,6 +24,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Resources\TurnTrackerInternal.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TurnTrackerInternal.resx</DependentUpon>
+    </Compile>
     <Compile Update="Resources\TurnTracker.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -31,6 +37,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Update="Resources\TurnTrackerInternal.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>TurnTrackerInternal.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Update="Resources\TurnTracker.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>TurnTracker.Designer.cs</LastGenOutput>

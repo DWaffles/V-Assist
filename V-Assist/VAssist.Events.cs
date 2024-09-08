@@ -20,12 +20,14 @@ namespace VAssist
             if (e.Id.StartsWith("npt"))
                 await HandleNarrativePointTrackerInteractionsAsync(client, e);
             else if (e.Id.StartsWith("tts"))
-                await HandleTurnTrackerInteractions(client, e);
+                await HandleTurnTrackerInteractionsAsync(client, e);
         }
         internal async Task ModalSubmittedEvent(DiscordClient Client, ModalSubmittedEventArgs e)
         {
             Log.Logger.Information($"Processing modal submitted with ID: {e.Interaction.Data.CustomId} by user: {e.Interaction.User.Id}");
-            if (e.Interaction.Data.CustomId == "modal_npt")
+
+            var modalId = e.Interaction.Data.CustomId;
+            if (modalId.Equals("modal_npt"))
             {
                 await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
 
@@ -33,6 +35,16 @@ namespace VAssist
                 var service = (NarrativePointTrackerService)Client.ServiceProvider.GetRequiredService(typeof(NarrativePointTrackerService));
 
                 var webhookBuilder = service.HandleTrackerModal(message, e.Interaction.User, e.Values);
+                await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+            }
+            else if (modalId.StartsWith("tts_modal_director_characters"))
+            {
+                await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+
+                var message = e.Interaction.Message;
+                var service = (TurnTrackerService)Client.ServiceProvider.GetRequiredService(typeof(TurnTrackerService));
+
+                var webhookBuilder = service.HandleDirectorAddCharactersModal(message, e.Values, modalId);
                 await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
             }
         }

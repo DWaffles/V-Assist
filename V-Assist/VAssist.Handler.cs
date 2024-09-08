@@ -105,7 +105,7 @@ namespace VAssist
                     throw new NotSupportedException();
             }
         }
-        internal async Task HandleTurnTrackerInteractions(DiscordClient client, ComponentInteractionCreatedEventArgs e)
+        internal async Task HandleTurnTrackerInteractionsAsync(DiscordClient client, ComponentInteractionCreatedEventArgs e)
         {
             var message = e.Message;
             var embed = new DiscordEmbedBuilder(message.Embeds[0]);
@@ -113,12 +113,24 @@ namespace VAssist
 
             switch (e.Id) // tts
             {
-                case "tts_dropdown":
-                    if (service.UserIsDirector(message, e.User)) //check controller status
+                case "tts_dropdown_team_join":
+                    if (e.Values.Length == 0) // Check to see if the user has selected any dropdown options
                     {
-
+                        var builder = new DiscordInteractionResponseBuilder()
+                        {
+                            Content = $"To leave a team, select the `{Resources.TurnTracker.LeaveTeamOptionLabel}` option.",
+                            IsEphemeral = true,
+                        };
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.ChannelMessageWithSource, builder);
                     }
-                    else
+                    else if (service.UserIsDirector(message, e.User)) // Check if user is director
+                    {
+                        // Director Has Selected Characters // Director wants to change the allegiance of selected characters
+                        // Director Has No Selected Characters // Director wants to add new characters to the turn tracker
+                        var builder = service.HandleDirectorAddCharactersSelection(e.Values.First());
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.Modal, builder);
+                    }
+                    else // User is a player wanting to join or leave a team
                     {
                         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
                         var webhookBuilder = service.HandlePlayerTeamChange(message, e.User, e.Values.First());
@@ -126,19 +138,19 @@ namespace VAssist
                     }
                     break;
                 case "tts_button_turn":
-                    await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
-
-                    if (service.UserIsDirector(message, e.User)) //check controller status
+                    if (service.UserIsDirector(message, e.User)) // Check if user is director
                     {
 
                     }
-                    else if (service.UserHasCharacter(message, e.User)) // Check if user is in a team
+                    else if (service.UserHasCharacter(message, e.User)) // Check if user is in a team //check controller status?
                     {
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
                         var webhookBuilder = service.HandlePlayerTurnToggle(message, e.User);
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
                     else
                     {
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
                         string content = "You do not have a character for this Turn Tracker.";
                         await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
                     }
@@ -148,7 +160,8 @@ namespace VAssist
                 case "tts_button_reaction_max":
                     await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
 
-                    if (service.UserIsDirector(message, e.User)) //check controller status
+                    //check controller status
+                    if (service.UserIsDirector(message, e.User)) // Check if user is director
                     {
 
                     }

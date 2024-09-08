@@ -138,10 +138,10 @@
   <data name="ControllerFieldValueDefault" xml:space="preserve">
     <value>Not Assigned</value>
   </data>
-  <data name="DirectorCharacterFieldName" xml:space="preserve">
-    <value>Director Controlled Character</value>
+  <data name="DirectorCharactersFieldName" xml:space="preserve">
+    <value>Director Controlled Characters</value>
   </data>
-  <data name="DirectorCharacterFieldValueDefault" xml:space="preserve">
+  <data name="DirectorCharactersFieldValueDefault" xml:space="preserve">
     <value>None Selected</value>
   </data>
   <data name="DirectorFieldName" xml:space="preserve">

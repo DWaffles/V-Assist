@@ -24,7 +24,7 @@ namespace VAssist.Services
                 options.Add(new(label: $"Join {DefaultTeamNames[i]}", value: $"tts_dropdown_{i}"));
             }
             options.Add(new(label: Resources.TurnTracker.LeaveTeamOptionLabel, value: $"tts_dropdown_leave"));
-            var dropdown = new DiscordSelectComponent(customId: "tts_dropdown", placeholder: Resources.TurnTracker.TeamSelectionPlaceholder, options, disabled: false, minOptions: 0, maxOptions: 1);
+            var dropdown = new DiscordSelectComponent(customId: "tts_dropdown_team_join", placeholder: Resources.TurnTracker.TeamSelectionPlaceholder, options, disabled: false, minOptions: 0, maxOptions: 1);
 
             return
             [
@@ -54,7 +54,7 @@ namespace VAssist.Services
             team_fields.Remove(director_field);
             team_fields.Remove(controller_field);
             team_fields.Remove(rotation_field);
-            team_fields.Remove(team_fields.Last(f => f.Name.Equals(Resources.TurnTracker.DirectorCharacterFieldName))); // Current Action is after user named fields, so use Last
+            team_fields.Remove(team_fields.Last(f => f.Name.Equals(Resources.TurnTracker.DirectorCharactersFieldName))); // Current Action is after user named fields, so use Last
             team_fields.Remove(team_fields.Last(f => f.Name.Equals(Resources.TurnTracker.KeyFieldName))); // Key is after user named fields, so use Last
 
             return new()
@@ -104,7 +104,7 @@ namespace VAssist.Services
             {
                 CharacterName = mention
                     ? null
-                    : str[str.IndexOf("**")..str.LastIndexOf("**")], // Character Name
+                    : str[(str.IndexOf(" ")+1)..(str.LastIndexOf("[")-1)], // Character Name
                 PlayerID = mention
                     ? id
                     : null, // player ID

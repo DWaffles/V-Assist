@@ -1,5 +1,6 @@
 ﻿using DSharpPlus.Commands.Processors.SlashCommands;
 using DSharpPlus.Entities;
+using VAssist.Common;
 using VAssist.Trackers;
 
 namespace VAssist.Services
@@ -22,6 +23,10 @@ namespace VAssist.Services
         /// The emoji <see cref="string"/> representing that a <see cref="TurnTrackerCharacterModel"/> has their turn and reaction unavailable.
         /// </summary>
         internal static string Red { get; } = ":red_square:";
+        /// <summary>
+        /// Specific letters and symbols that are not to be allowed in the names of non-player characters. Normally Discord formatting characters that might disrupt the formatting of the Turn Tracker.
+        /// </summary>
+        internal static string[] ProhibitedLetters { get; } = ["*", "_", "`", "~"];
         /// <summary>
         /// List of default team names to use for a new turn tracker.
         /// </summary>
@@ -54,11 +59,11 @@ namespace VAssist.Services
                 embed.AddField(DefaultTeamNames[i], Resources.TurnTracker.TeamFieldValueDefault, inline: true);
             }
 
-            embed.AddField(Resources.TurnTracker.KeyFieldName,  $"{Green} = {Resources.TurnTracker.GreenDescription}" +
+            embed.AddField(Resources.TurnTracker.KeyFieldName, $"{Green} = {Resources.TurnTracker.GreenDescription}" +
                                                                 $"\n{Blue} = {Resources.TurnTracker.BlueDescription}" +
                                                                 $"\n{Orange} = {Resources.TurnTracker.OrangeDescription}" +
                                                                 $"\n{Red} = {Resources.TurnTracker.RedDescription}", inline: false);
-            embed.AddField(Resources.TurnTracker.DirectorCharacterFieldName, Resources.TurnTracker.DirectorCharacterFieldValueDefault);
+            embed.AddField(Resources.TurnTracker.DirectorCharactersFieldName, Resources.TurnTracker.DirectorCharactersFieldValueDefault);
             return embed.Build();
         }
         /// <summary>
@@ -142,6 +147,52 @@ namespace VAssist.Services
             {
                 character.ReactionsMax = character.ReactionsMax == 1 ? 2 : 1;
                 character.ReactionsAvailable = Math.Min(character.ReactionsAvailable, character.ReactionsMax);
+            }
+
+            UpdateTurnTracker(builder, turnTracker);
+            return new DiscordWebhookBuilder()
+               .AddEmbed(builder)
+               .AddComponents(message.Components);
+        }
+        internal DiscordInteractionResponseBuilder HandleDirectorAddCharactersSelection(string optionId)
+        {
+            var response = new DiscordInteractionResponseBuilder()
+                .WithCustomId($"tts_modal_director_characters_{Util.ParseInt(optionId)}")
+                .WithTitle("Add New Non-Player Characters");
+
+            for (int i = 0; i < 5; i++)
+            {
+                response.AddComponents(new DiscordTextInputComponent(label: $"Non-Player Character Name:", customId: $"{i}", placeholder: "Name...", required: false));
+            }
+
+            return response;
+        }
+        internal DiscordWebhookBuilder HandleDirectorAddCharactersModal(DiscordMessage message, IReadOnlyDictionary<string, string> modalValues, string modalId)
+        {
+            var builder = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an builder builder to be able to edit it
+            var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker
+
+            // Add New Characters to Specified Team
+            int teamPos = Util.ParseInt(modalId);
+            foreach (var kvp in modalValues)
+            {
+                var name = kvp.Value.Trim();
+                foreach (string remove in ProhibitedLetters)
+                {
+                    name = name.Replace(remove, string.Empty);
+                }
+
+                if (string.IsNullOrEmpty(name))
+                    continue;
+                
+                turnTracker.Teams[teamPos].Characters.Add(new()
+                {
+                    CharacterName = name,
+                    PlayerID = null,
+                    ReactionsAvailable = 1,
+                    ReactionsMax = 1,
+                    TurnAvailable = true
+                });
             }
 
             UpdateTurnTracker(builder, turnTracker);
