@@ -27,9 +27,9 @@ namespace VAssist.Services
         /// </summary>
         internal static List<string> DefaultTeamNames { get; } = ["Team A", "Team B", "Team C", "Team D", "Team E", "Team F"];
         internal static DiscordComponent[] TurnTrackerRowOne { get; } = [
-            new DiscordButtonComponent(style: DiscordButtonStyle.Success, customId: "tts_button_turn", label: "Toggle Turn", emoji: new DiscordComponentEmoji("🔃")),
-            new DiscordButtonComponent(style: DiscordButtonStyle.Primary, customId: "tts_button_reaction_cycle", label: "Cycle Available Reaction(s)", emoji: new DiscordComponentEmoji("🔃")),
-            new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "tts_button_reaction_max", label: "Cycle Max Reactions", emoji: new DiscordComponentEmoji("🔃")),
+            new DiscordButtonComponent(style: DiscordButtonStyle.Success, customId: "tts_button_turn", label: Resources.TurnTracker.ButtonToggleTurnLabel, emoji: new DiscordComponentEmoji("🔃")),
+            new DiscordButtonComponent(style: DiscordButtonStyle.Primary, customId: "tts_button_reaction_cycle", label: Resources.TurnTracker.ButtonReactionCycleLabel, emoji: new DiscordComponentEmoji("🔃")),
+            new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "tts_button_reaction_max", label: Resources.TurnTracker.ButtonReactionMaxLabel, emoji: new DiscordComponentEmoji("🔃")),
         ];
         /// <summary>
         /// Gets a <see cref="DiscordEmbed"/> representing a new turn tracker.
@@ -38,27 +38,27 @@ namespace VAssist.Services
         /// <param name="num_teams">The number of teams to include in the new turn tracker.</param>
         /// <param name="director">The <see cref="DiscordUser"/> who will serve as the director for the turn tracker.</param>
         /// <returns>A <see cref="DiscordEmbed"/> representing a new turn tracker.</returns>
-        internal DiscordEmbed GetNewEmbed(SlashCommandContext ctx, int num_teams, DiscordUser? director = null)
+        internal DiscordEmbed GetNewEmbed(SlashCommandContext ctx, int num_teams, DiscordUser director)
         {
             var embed = new DiscordEmbedBuilder()
-                .WithAuthor(name: "Turn Tracker", iconUrl: ctx.Client.CurrentUser.AvatarUrl)
-                .AddField("Current Controller", "Not Assigned", inline: true)
-                .AddField("Director", (director?.Mention ?? "Not Assigned"), inline: true)
-                .AddField("Rotation History (Turn 1)", "New turn", inline: false)
-                .WithFooter(text: ctx.Client.CurrentUser.Username + " • TTS v1.0")
+                .WithAuthor(name: Resources.TurnTracker.AuthorName, iconUrl: ctx.Client.CurrentUser.AvatarUrl)
+                .AddField(Resources.TurnTracker.ControllerFieldName, Resources.TurnTracker.ControllerFieldValueDefault, inline: true)
+                .AddField(Resources.TurnTracker.DirectorFieldName, director.Mention, inline: true)
+                .AddField(Resources.TurnTracker.RotationFieldNamePrefix + " (Turn 1)", Resources.TurnTracker.RotationFieldValueDefault, inline: false)
+                .WithFooter(text: ctx.Client.CurrentUser.Username + " • " + Resources.TurnTracker.TurnTrackerCurrentVersion)
                 .WithTimestamp(DateTime.Now)
                 .WithColor(new DiscordColor("bc2019"));
 
             for (int i = 0; i < num_teams && i < DefaultTeamNames.Count; i++) // Add the number of specified teams to the turn tracker
             {
-                embed.AddField(DefaultTeamNames[i], "Empty", inline: true);
+                embed.AddField(DefaultTeamNames[i], Resources.TurnTracker.TeamFieldValueDefault, inline: true);
             }
 
-            embed.AddField("Key", $"{Green} = Turn, reaction available." +
-                                $"\n{Blue} = Turn available, reaction unavailable." +
-                                $"\n{Orange} = Turn unavailable, reaction available." +
-                                $"\n{Red} = Turn, reaction unavailable.", inline: false);
-            embed.AddField("Director Controlled Character", "None Selected"); // TBD
+            embed.AddField(Resources.TurnTracker.KeyFieldName,  $"{Green} = {Resources.TurnTracker.GreenDescription}" +
+                                                                $"\n{Blue} = {Resources.TurnTracker.BlueDescription}" +
+                                                                $"\n{Orange} = {Resources.TurnTracker.OrangeDescription}" +
+                                                                $"\n{Red} = {Resources.TurnTracker.RedDescription}", inline: false);
+            embed.AddField(Resources.TurnTracker.DirectorCharacterFieldName, Resources.TurnTracker.DirectorCharacterFieldValueDefault);
             return embed.Build();
         }
         /// <summary>

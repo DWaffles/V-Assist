@@ -23,8 +23,8 @@ namespace VAssist.Services
             {
                 options.Add(new(label: $"Join {DefaultTeamNames[i]}", value: $"tts_dropdown_{i}"));
             }
-            options.Add(new(label: $"Leave team", value: $"tts_dropdown_leave"));
-            var dropdown = new DiscordSelectComponent(customId: "tts_dropdown", placeholder: "Players, join a team. Director, add characters to a team.", options, disabled: false, minOptions: 0, maxOptions: 1);
+            options.Add(new(label: Resources.TurnTracker.LeaveTeamOptionLabel, value: $"tts_dropdown_leave"));
+            var dropdown = new DiscordSelectComponent(customId: "tts_dropdown", placeholder: Resources.TurnTracker.TeamSelectionPlaceholder, options, disabled: false, minOptions: 0, maxOptions: 1);
 
             return
             [
@@ -46,16 +46,16 @@ namespace VAssist.Services
             var team_fields = embed.Fields?.ToList() ?? [];
 
             // From the builder, get the fields that we need to extract the value for.
-            var director_field = team_fields.First(f => f.Name.Equals("Director"));
-            var controller_field = team_fields.First(f => f.Name.Equals("Current Controller"));
-            var rotation_field = team_fields.First(f => f.Name.StartsWith("Rotation History"));
+            var director_field = team_fields.First(f => f.Name.Equals(Resources.TurnTracker.DirectorFieldName));
+            var controller_field = team_fields.First(f => f.Name.Equals(Resources.TurnTracker.ControllerFieldName));
+            var rotation_field = team_fields.First(f => f.Name.StartsWith(Resources.TurnTracker.RotationFieldNamePrefix));
 
             // Remove fields from the team_fields variable that do not correlate to teams
             team_fields.Remove(director_field);
             team_fields.Remove(controller_field);
             team_fields.Remove(rotation_field);
-            team_fields.Remove(team_fields.Last(f => f.Name.Equals("Director Controlled Character"))); // Current Action is after user named fields, so use Last
-            team_fields.Remove(team_fields.Last(f => f.Name.Equals("Key"))); // Key is after user named fields, so use Last
+            team_fields.Remove(team_fields.Last(f => f.Name.Equals(Resources.TurnTracker.DirectorCharacterFieldName))); // Current Action is after user named fields, so use Last
+            team_fields.Remove(team_fields.Last(f => f.Name.Equals(Resources.TurnTracker.KeyFieldName))); // Key is after user named fields, so use Last
 
             return new()
             {
@@ -77,7 +77,7 @@ namespace VAssist.Services
             var list = new List<TurnTrackerTeamModel>(); // create a variable to hold all of the teams in the builder
             foreach (var field in teamFields)
             {
-                var characters = field.Value.Equals("Empty") // check to see if the team has any characters
+                var characters = field.Value.Equals(Resources.TurnTracker.TeamFieldValueDefault) // check to see if the team has any characters
                     ? [] // if there are no characters
                     : field.Value.Split('\n').Select(str => ParseTurnTrackerCharacter(str)).ToList(); // otherwise, parse each line into a character model
 
