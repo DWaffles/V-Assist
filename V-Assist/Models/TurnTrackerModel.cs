@@ -30,6 +30,10 @@ namespace VAssist.Trackers
         internal required int ReactionsAvailable { get; set; }
         internal required int ReactionsMax { get; set; }
         internal required bool TurnAvailable { get; set; }
+        internal string? Mention()
+        {
+            return PlayerID == null ? null : $"<@{PlayerID}>";
+        }
         public override string ToString()
         {
             string str = string.Empty;
@@ -48,7 +52,7 @@ namespace VAssist.Trackers
                     str += TurnTrackerService.Red;
             }
             str += " ";
-            str += CharacterName is null ? $"<@{PlayerID}>" : CharacterName;
+            str += Mention() ?? CharacterName;
             str += $" [{ReactionsAvailable}/{ReactionsMax}]";
             return str;
         }

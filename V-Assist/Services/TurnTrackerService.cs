@@ -1,5 +1,4 @@
-﻿using DSharpPlus.Commands.Processors.SlashCommands;
-using DSharpPlus.Entities;
+﻿using DSharpPlus.Entities;
 using VAssist.Common;
 using VAssist.Trackers;
 
@@ -36,35 +35,11 @@ namespace VAssist.Services
             new DiscordButtonComponent(style: DiscordButtonStyle.Primary, customId: "tts_button_reaction_cycle", label: Resources.TurnTracker.ButtonReactionCycleLabel, emoji: new DiscordComponentEmoji("🔃")),
             new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "tts_button_reaction_max", label: Resources.TurnTracker.ButtonReactionMaxLabel, emoji: new DiscordComponentEmoji("🔃")),
         ];
-        /// <summary>
-        /// Gets a <see cref="DiscordEmbed"/> representing a new turn tracker.
-        /// </summary>
-        /// <param name="ctx">The base context for slash command contexts.</param>
-        /// <param name="num_teams">The number of teams to include in the new turn tracker.</param>
-        /// <param name="director">The <see cref="DiscordUser"/> who will serve as the director for the turn tracker.</param>
-        /// <returns>A <see cref="DiscordEmbed"/> representing a new turn tracker.</returns>
-        internal DiscordEmbed GetNewEmbed(SlashCommandContext ctx, int num_teams, DiscordUser director)
+        internal DiscordMessageBuilder GetNewTurnTracker(DiscordUser currentUser, DiscordUser director, int num_teams)
         {
-            var embed = new DiscordEmbedBuilder()
-                .WithAuthor(name: Resources.TurnTracker.AuthorName, iconUrl: ctx.Client.CurrentUser.AvatarUrl)
-                .AddField(Resources.TurnTracker.ControllerFieldName, Resources.TurnTracker.ControllerFieldValueDefault, inline: true)
-                .AddField(Resources.TurnTracker.DirectorFieldName, director.Mention, inline: true)
-                .AddField(Resources.TurnTracker.RotationFieldNamePrefix + " (Turn 1)", Resources.TurnTracker.RotationFieldValueDefault, inline: false)
-                .WithFooter(text: ctx.Client.CurrentUser.Username + " • " + Resources.TurnTracker.TurnTrackerCurrentVersion)
-                .WithTimestamp(DateTime.Now)
-                .WithColor(new DiscordColor("bc2019"));
-
-            for (int i = 0; i < num_teams && i < DefaultTeamNames.Count; i++) // Add the number of specified teams to the turn tracker
-            {
-                embed.AddField(DefaultTeamNames[i], Resources.TurnTracker.TeamFieldValueDefault, inline: true);
-            }
-
-            embed.AddField(Resources.TurnTracker.KeyFieldName, $"{Green} = {Resources.TurnTracker.GreenDescription}" +
-                                                                $"\n{Blue} = {Resources.TurnTracker.BlueDescription}" +
-                                                                $"\n{Orange} = {Resources.TurnTracker.OrangeDescription}" +
-                                                                $"\n{Red} = {Resources.TurnTracker.RedDescription}", inline: false);
-            embed.AddField(Resources.TurnTracker.DirectorCharactersFieldName, Resources.TurnTracker.DirectorCharactersFieldValueDefault);
-            return embed.Build();
+            return new DiscordMessageBuilder()
+                .AddEmbed(GetNewEmbed(currentUser, num_teams, director))
+                .AddComponents(GetNewComponents(num_teams));
         }
         /// <summary>
         /// Checks to see if a <see cref="DiscordUser"/> is a part of any team on the Turn Tracker associated with the <see cref="DiscordMessage"/>.
@@ -100,6 +75,8 @@ namespace VAssist.Services
             var builder = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an builder builder to be able to edit it
             var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker
 
+            // check to see if 25 characters
+
             RemovePlayerCharacterFromTeams(user, turnTracker);
 
             if (!optionId.Equals("tts_dropdown_leave")) // The user has chosen to sign up for a specific team
@@ -107,10 +84,7 @@ namespace VAssist.Services
                 AddPlayerCharacterToTeam(user, turnTracker, optionId);
             }
 
-            UpdateTurnTracker(builder, turnTracker);
-            return new DiscordWebhookBuilder()
-               .AddEmbed(builder)
-               .AddComponents(message.Components);
+            return UpdateTurnTracker(builder, turnTracker);
         }
         internal DiscordWebhookBuilder HandlePlayerTurnToggle(DiscordMessage message, DiscordUser user)
         {
@@ -123,10 +97,7 @@ namespace VAssist.Services
 
             character.TurnAvailable = !character.TurnAvailable;
 
-            UpdateTurnTracker(builder, turnTracker);
-            return new DiscordWebhookBuilder()
-               .AddEmbed(builder)
-               .AddComponents(message.Components);
+            return UpdateTurnTracker(builder, turnTracker);
         }
         internal DiscordWebhookBuilder HandlePlayerReactionCycle(DiscordMessage message, DiscordUser user, string componentId)
         {
@@ -149,10 +120,7 @@ namespace VAssist.Services
                 character.ReactionsAvailable = Math.Min(character.ReactionsAvailable, character.ReactionsMax);
             }
 
-            UpdateTurnTracker(builder, turnTracker);
-            return new DiscordWebhookBuilder()
-               .AddEmbed(builder)
-               .AddComponents(message.Components);
+            return UpdateTurnTracker(builder, turnTracker);
         }
         internal DiscordInteractionResponseBuilder HandleDirectorAddCharactersSelection(string optionId)
         {
@@ -188,7 +156,7 @@ namespace VAssist.Services
 
                 if (string.IsNullOrEmpty(name))
                     continue;
-                
+
                 turnTracker.Teams[teamPos].Characters.Add(new()
                 {
                     CharacterName = name,
@@ -199,10 +167,7 @@ namespace VAssist.Services
                 });
             }
 
-            UpdateTurnTracker(builder, turnTracker);
-            return new DiscordWebhookBuilder()
-               .AddEmbed(builder)
-               .AddComponents(message.Components);
+            return UpdateTurnTracker(builder, turnTracker);
         }
     }
 }

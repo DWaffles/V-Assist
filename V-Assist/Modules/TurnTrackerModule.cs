@@ -20,14 +20,7 @@ namespace VAssist.Modules
                 DiscordUser? director = null)
         {
             director ??= ctx.User;
-
-            var embed = TurnTrackerService.GetNewEmbed(ctx, num_teams, director);
-            var components = TurnTrackerService.GetActionRowComponents(num_teams);
-            var builder = new DiscordMessageBuilder()
-                .AddEmbed(embed)
-                .AddComponents(components);
-
-            return ctx.RespondAsync(builder);
+            return ctx.RespondAsync(TurnTrackerService.GetNewTurnTracker(ctx.Client.CurrentUser, director, num_teams));
         }
     }
 }

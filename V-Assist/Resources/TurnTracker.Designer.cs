@@ -106,6 +106,15 @@ namespace VAssist.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Director, select characters..
+        /// </summary>
+        internal static string CharacterSelectionPlaceholder {
+            get {
+                return ResourceManager.GetString("CharacterSelectionPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current Controller.
         /// </summary>
         internal static string ControllerFieldName {

@@ -24,11 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources\TurnTrackerInternal.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>TurnTrackerInternal.resx</DependentUpon>
-    </Compile>
     <Compile Update="Resources\TurnTracker.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -37,10 +32,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\TurnTrackerInternal.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>TurnTrackerInternal.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
     <EmbeddedResource Update="Resources\TurnTracker.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>TurnTracker.Designer.cs</LastGenOutput>

@@ -132,6 +132,9 @@
   <data name="ButtonToggleTurnLabel" xml:space="preserve">
     <value>Toggle Turn</value>
   </data>
+  <data name="CharacterSelectionPlaceholder" xml:space="preserve">
+    <value>Director, select characters.</value>
+  </data>
   <data name="ControllerFieldName" xml:space="preserve">
     <value>Current Controller</value>
   </data>
