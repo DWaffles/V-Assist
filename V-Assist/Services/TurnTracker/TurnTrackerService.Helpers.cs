@@ -67,9 +67,15 @@ namespace VAssist.Services
 
             // Update selected characters
             var selected = turnTracker.Teams.SelectMany(t => t.Characters).Where(c => c.SelectedByDirector);
-            var field_character = builder.Fields
-                .Last(f => f.Name.StartsWith(Resources.TurnTracker.DirectorCharactersFieldName)); // Director Character is after user named fields, so use Last
-            field_character.Value = string.Join('\n', selected.Select(c => c.ToString()));
+            var field_character = builder.Fields.Last(f => f.Name.StartsWith(Resources.TurnTracker.DirectorCharactersFieldName)); // Director Character is after user named fields, so use Last
+            if (selected.Any())
+            {
+                field_character.Value = string.Join('\n', selected.Select(c => c.ToString()));
+            }
+            else
+            {
+                field_character.Value = Resources.TurnTracker.DirectorCharactersFieldValueDefault;
+            }
         }
         private static List<DiscordActionRowComponent> UpdateComponents(TurnTrackerModel turnTracker)
         {
@@ -118,16 +124,23 @@ namespace VAssist.Services
         private static DiscordSelectComponent[]? GetTurnTrackerCharacterSelect(TurnTrackerModel turnTracker)
         {
             var options = new List<DiscordSelectComponentOption>();
-            foreach (var team in turnTracker.Teams)
+            for(int tIndex = 0; tIndex < turnTracker.Teams.Count; tIndex++)
             {
-                foreach (var ch in team.Characters.Where(character => character.PlayerID == null)) // select only NPC's
+                var team = turnTracker.Teams[tIndex];
+                for (int cIndex = 0; cIndex < team.Characters.Count; cIndex++)
                 {
-                    options.Add(new(label: $"Select {ch.Mention() ?? ch.CharacterName} from {team.TeamName}", value: $"tts_dropdown_{options.Count}"));
+                    var cModel = team.Characters[cIndex];
+                    if(cModel.PlayerID == null) // Player characters are not human readable in select menu currently
+                    {
+                        options.Add(new(label: $"Select {cModel.Mention() ?? cModel.CharacterName} from {team.TeamName}",
+                                        value: $"tts_dropdown_{tIndex}_{cIndex}",
+                                        isDefault: cModel.SelectedByDirector));
+                    }
                 }
             }
 
             if (options.Count != 0)
-                return [new(customId: "tts_dropdown_character_select", placeholder: Resources.TurnTracker.CharacterSelectionPlaceholder, options, disabled: false, minOptions: 0, maxOptions: Math.Min(1, 5))];
+                return [new(customId: "tts_dropdown_character_select", placeholder: Resources.TurnTracker.CharacterSelectionPlaceholder, options, disabled: false, minOptions: 0, maxOptions: Math.Min(options.Count, 5))];
             else
                 return null;
         }

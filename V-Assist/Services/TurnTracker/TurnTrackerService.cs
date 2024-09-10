@@ -25,12 +25,12 @@ namespace VAssist.Services
         /// <summary>
         /// Specific letters and symbols that are not to be allowed in the names of non-player characters. Normally Discord formatting characters that might disrupt the formatting of the Turn Tracker.
         /// </summary>
-        internal static string[] ProhibitedLetters { get; } = ["*", "_", "`", "~"];
+        private static string[] ProhibitedLetters { get; } = ["*", "_", "`", "~"];
         /// <summary>
         /// List of default team names to use for a new turn tracker.
         /// </summary>
-        internal static List<string> DefaultTeamNames { get; } = ["Team A", "Team B", "Team C", "Team D", "Team E", "Team F"];
-        internal static DiscordComponent[] TurnTrackerRowOne { get; } = [
+        private static List<string> DefaultTeamNames { get; } = ["Team A", "Team B", "Team C", "Team D", "Team E", "Team F"];
+        private static DiscordComponent[] TurnTrackerRowOne { get; } = [
             new DiscordButtonComponent(style: DiscordButtonStyle.Success, customId: "tts_button_turn", label: Resources.TurnTracker.ButtonToggleTurnLabel, emoji: new DiscordComponentEmoji("🔃")),
             new DiscordButtonComponent(style: DiscordButtonStyle.Primary, customId: "tts_button_reaction_cycle", label: Resources.TurnTracker.ButtonReactionCycleLabel, emoji: new DiscordComponentEmoji("🔃")),
             new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "tts_button_reaction_max", label: Resources.TurnTracker.ButtonReactionMaxLabel, emoji: new DiscordComponentEmoji("🔃")),
@@ -167,6 +167,23 @@ namespace VAssist.Services
                     SelectedByDirector = false
                 });
             }
+            return UpdateTurnTracker(builder, turnTracker);
+        }
+        internal DiscordWebhookBuilder HandleCharacterSelection(DiscordMessage message, string[] components)
+        {
+            var builder = new DiscordEmbedBuilder(message.Embeds[0]); // put the turn tracker in an builder builder to be able to edit it
+            var turnTracker = ParseTurnTracker(message.Embeds[0]); // parse the changable details of the turn tracker
+
+            foreach (var ch in turnTracker.Teams.SelectMany(team => team.Characters))
+            {
+                ch.SelectedByDirector = false;
+            }
+            foreach (var comp in components)
+            {
+                var code = Util.MatchIntegers(comp);
+                turnTracker.Teams[code[0]].Characters[code[1]].SelectedByDirector = true;
+            }
+
             return UpdateTurnTracker(builder, turnTracker);
         }
     }

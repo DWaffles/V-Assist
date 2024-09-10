@@ -142,7 +142,7 @@
     <value>Not Assigned</value>
   </data>
   <data name="DirectorCharactersFieldName" xml:space="preserve">
-    <value>Director Controlled Characters</value>
+    <value>Director Controlled Characters (Max 5)</value>
   </data>
   <data name="DirectorCharactersFieldValueDefault" xml:space="preserve">
     <value>None Selected</value>

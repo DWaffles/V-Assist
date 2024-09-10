@@ -57,5 +57,15 @@ namespace VAssist.Trackers
             str += $" [{ReactionsAvailable}/{ReactionsMax}]";
             return str;
         }
+        public override bool Equals(object? obj)
+        {
+            return obj is TurnTrackerCharacterModel model &&
+                   CharacterName == model.CharacterName &&
+                   PlayerID == model.PlayerID;
+        }
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(CharacterName, PlayerID);
+        }
     }
 }

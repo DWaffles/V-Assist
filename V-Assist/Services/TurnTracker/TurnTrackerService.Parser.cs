@@ -32,6 +32,19 @@ namespace VAssist.Services
             team_fields.Remove(characters_field);
             team_fields.Remove(team_fields.Last(f => f.Name.Equals(Resources.TurnTracker.KeyFieldName))); // Key is after user named fields, so use Last
 
+            var teams = ParseTurnTrackerTeams(team_fields); // Parse teams and characters from all of the team fields
+            if(!characters_field.Value.Equals(Resources.TurnTracker.DirectorCharactersFieldValueDefault))
+            {
+                // !characters_field.Value.Equals(Resources.TurnTracker.DirectorCharactersFieldValueDefault)
+                var selected = characters_field.Value.Split('\n')
+                .Select(ch => ParseTurnTrackerCharacter(ch));
+                foreach (var character in selected)
+                {
+                    var test = teams.SelectMany(tm => tm.Characters).Single(ch => ch.Equals(character));
+                    test.SelectedByDirector = true;
+                }
+            }
+
             return new()
             {
                 DirectorId = Util.ParseUlong(director_field.Value), // Parse required director Id
@@ -39,7 +52,7 @@ namespace VAssist.Services
                 TurnNumber = Util.ParseInt(rotation_field.Name), // Parse required turn number
                 RotationHistory = rotation_field.Value, // Parse rotation history
                 TrackerVersion = trackerVersion, // Parse tracker version
-                Teams = ParseTurnTrackerTeams(team_fields) // Parse teams and characters from all of the team fields
+                Teams = teams,
             };
         }
         /// <summary>
@@ -74,7 +87,7 @@ namespace VAssist.Services
             // Check to see if the string contains a mention
             // If it does, it is a player ch, otherwise, an NPC of director control
             bool mention = Util.TryParseMention(str, out ulong id);
-            var reactions = Util.MatchNumbers(str[str.LastIndexOf('[')..str.LastIndexOf(']')]); // parse all the numbers in the reaction section
+            var reactions = Util.MatchIntegers(str[str.LastIndexOf('[')..str.LastIndexOf(']')]); // parse all the numbers in the reaction section
             return new()
             {
                 CharacterName = mention

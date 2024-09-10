@@ -77,7 +77,7 @@ namespace VAssist.Services
         }
         internal void ParsePointChangeField(string fieldValue, out ulong unixTime, out string? reason)
         {
-            var matches = Util.MatchNumbers(fieldValue);
+            var matches = Util.MatchUlongs(fieldValue);
             unixTime = matches.Count >= 2 ? matches[1] : 0;
             reason = null;
 

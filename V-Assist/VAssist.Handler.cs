@@ -137,6 +137,20 @@ namespace VAssist
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
                     break;
+                case "tts_dropdown_character_select":
+                    if (service.UserIsDirector(message, e.User)) // Check if user is director
+                    {
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+                        var webhookBuilder = service.HandleCharacterSelection(message, e.Values);
+                        await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
+                    }
+                    else
+                    {
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+                        string content = "You do not have a character for this Turn Tracker.";
+                        await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
+                    }
+                    break;
                 case "tts_button_turn":
                     if (service.UserIsDirector(message, e.User)) // Check if user is director
                     {

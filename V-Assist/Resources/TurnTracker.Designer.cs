@@ -133,7 +133,7 @@ namespace VAssist.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Director Controlled Characters.
+        ///   Looks up a localized string similar to Director Controlled Characters (Max 5).
         /// </summary>
         internal static string DirectorCharactersFieldName {
             get {

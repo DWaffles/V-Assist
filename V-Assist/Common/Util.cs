@@ -42,9 +42,13 @@ namespace VAssist.Common
             var match = NumberRegex().Match(str);
             return match.Success ? ulong.Parse(match.Value) : null;
         }
-        internal static List<ulong> MatchNumbers(string str)
+        internal static List<ulong> MatchUlongs(string str)
         {
             return NumberRegex().Matches(str).Select(match => ulong.Parse(match.Value)).ToList();
+        }
+        internal static List<int> MatchIntegers(string str)
+        {
+            return NumberRegex().Matches(str).Select(match => int.Parse(match.Value)).ToList();
         }
         internal static bool TryParseMention(string str, out ulong id)
         {
