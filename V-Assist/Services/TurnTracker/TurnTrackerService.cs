@@ -167,7 +167,6 @@ namespace VAssist.Services
                     SelectedByDirector = false
                 });
             }
-
             return UpdateTurnTracker(builder, turnTracker);
         }
     }
