@@ -13,7 +13,7 @@ namespace VAssist.Services
         /// <param name="num_teams">The number of teams to include in the new turn tracker.</param>
         /// <param name="director">The <see cref="DiscordUser"/> who will serve as the director for the turn tracker.</param>
         /// <returns>A <see cref="DiscordEmbed"/> representing a new turn tracker.</returns>
-        internal DiscordEmbed GetNewEmbed(DiscordUser currentUser, int num_teams, DiscordUser director)
+        private static DiscordEmbed GetNewEmbed(DiscordUser currentUser, int num_teams, DiscordUser director)
         {
             var embed = new DiscordEmbedBuilder()
                 .WithAuthor(name: Resources.TurnTracker.AuthorName, iconUrl: currentUser.AvatarUrl)
@@ -36,7 +36,7 @@ namespace VAssist.Services
             embed.AddField(Resources.TurnTracker.DirectorCharactersFieldName, Resources.TurnTracker.DirectorCharactersFieldValueDefault);
             return embed.Build();
         }
-        internal static List<DiscordActionRowComponent> GetNewComponents(int num_teams)
+        private static List<DiscordActionRowComponent> GetNewComponents(int num_teams)
         {
             return
             [
@@ -44,7 +44,7 @@ namespace VAssist.Services
                 new DiscordActionRowComponent(GetTurnTrackerTeamDropDown(num_teams)),
             ];
         }
-        internal static List<DiscordActionRowComponent> UpdateComponents(TurnTrackerModel turnTracker)
+        private static List<DiscordActionRowComponent> UpdateComponents(TurnTrackerModel turnTracker)
         {
             // 3rd : Controller Action Button Row
             // 4th : Director Action Button Row // Add NPC // Remove // Kill // Rename?
@@ -68,7 +68,7 @@ namespace VAssist.Services
             return components;
 
         }
-        internal static DiscordSelectComponent[] GetTurnTrackerTeamDropDown(int num_teams)
+        private static DiscordSelectComponent[] GetTurnTrackerTeamDropDown(int num_teams)
         {
             var options = new List<DiscordSelectComponentOption>();
             for (int i = 0; i < num_teams && i < DefaultTeamNames.Count; i++)
@@ -78,7 +78,7 @@ namespace VAssist.Services
             options.Add(new(label: Resources.TurnTracker.LeaveTeamOptionLabel, value: $"tts_dropdown_leave"));
             return [new(customId: "tts_dropdown_team_join", placeholder: Resources.TurnTracker.TeamSelectionPlaceholder, options, disabled: false, minOptions: 0, maxOptions: 1)];
         }
-        internal static DiscordSelectComponent[] GetTurnTrackerTeamDropDown(TurnTrackerModel turnTracker)
+        private static DiscordSelectComponent[] GetTurnTrackerTeamDropDown(TurnTrackerModel turnTracker)
         {
             var options = new List<DiscordSelectComponentOption>();
             for (int i = 0; i < turnTracker.Teams.Count; i++)
@@ -88,7 +88,7 @@ namespace VAssist.Services
             options.Add(new(label: Resources.TurnTracker.LeaveTeamOptionLabel, value: $"tts_dropdown_leave"));
             return [new(customId: "tts_dropdown_team_join", placeholder: Resources.TurnTracker.TeamSelectionPlaceholder, options, disabled: false, minOptions: 0, maxOptions: 1)];
         }
-        internal static DiscordSelectComponent[]? GetTurnTrackerCharacterSelect(TurnTrackerModel turnTracker)
+        private static DiscordSelectComponent[]? GetTurnTrackerCharacterSelect(TurnTrackerModel turnTracker)
         {
             var options = new List<DiscordSelectComponentOption>();
             foreach (var team in turnTracker.Teams)
@@ -109,7 +109,7 @@ namespace VAssist.Services
         /// </summary>
         /// <param name="embed"></param>
         /// <returns>A <see cref="TurnTrackerModel"/>, which represents the changable data of a turn tracker.</returns>
-        internal static TurnTrackerModel ParseTurnTracker(DiscordEmbed embed)
+        private static TurnTrackerModel ParseTurnTracker(DiscordEmbed embed)
         {
             var trackerVersion = embed.Footer.Text;
             // Check Version is current
@@ -121,12 +121,13 @@ namespace VAssist.Services
             var director_field = team_fields.First(f => f.Name.Equals(Resources.TurnTracker.DirectorFieldName));
             var controller_field = team_fields.First(f => f.Name.Equals(Resources.TurnTracker.ControllerFieldName));
             var rotation_field = team_fields.First(f => f.Name.StartsWith(Resources.TurnTracker.RotationFieldNamePrefix));
+            var characters_field = team_fields.Last(f => f.Name.StartsWith(Resources.TurnTracker.DirectorCharactersFieldName)); // Director Character is after user named fields, so use Last
 
             // Remove fields from the team_fields variable that do not correlate to teams
             team_fields.Remove(director_field);
             team_fields.Remove(controller_field);
             team_fields.Remove(rotation_field);
-            team_fields.Remove(team_fields.Last(f => f.Name.StartsWith(Resources.TurnTracker.DirectorCharactersFieldName))); // Current Action is after user named fields, so use Last
+            team_fields.Remove(characters_field); 
             team_fields.Remove(team_fields.Last(f => f.Name.Equals(Resources.TurnTracker.KeyFieldName))); // Key is after user named fields, so use Last
 
             return new()
@@ -144,7 +145,7 @@ namespace VAssist.Services
         /// </summary>
         /// <param name="teamFields">A <see cref="List{DiscordEmbedField}"/> of the team fields from the turn tracker to pass.</param>
         /// <returns>A <see cref="List{TurnTrackerModel}"/> constructed from the team fields.</returns>
-        internal static List<TurnTrackerTeamModel> ParseTurnTrackerTeams(List<DiscordEmbedField> teamFields)
+        private static List<TurnTrackerTeamModel> ParseTurnTrackerTeams(List<DiscordEmbedField> teamFields)
         {
             var list = new List<TurnTrackerTeamModel>(); // create a variable to hold all of the teams in the builder
             foreach (var field in teamFields)
@@ -162,11 +163,11 @@ namespace VAssist.Services
             return list;
         }
         /// <summary>
-        /// Parse a <see cref="TurnTrackerCharacterModel"/> from a <see cref="string"/> line under a team field in a turn tracker builder.
+        /// Parse a <see cref="TurnTrackerCharacterModel"/> from a <see cref="string"/> line under a team field_team in a turn tracker builder.
         /// </summary>
         /// <param name="str">The <see cref="string"/> to parse.</param>
         /// <returns>The parsed <see cref="TurnTrackerCharacterModel"/>.</returns>
-        internal static TurnTrackerCharacterModel ParseTurnTrackerCharacter(string str)
+        private static TurnTrackerCharacterModel ParseTurnTrackerCharacter(string str)
         {
             // Check to see if the string contains a mention
             // If it does, it is a player ch, otherwise, an NPC of director control
@@ -183,6 +184,7 @@ namespace VAssist.Services
                 ReactionsAvailable = (int)reactions.First(),
                 ReactionsMax = (int)reactions.Last(),
                 TurnAvailable = str.Contains(Green) || str.Contains(Blue),
+                SelectedByDirector = false,
             };
         }
         /// <summary>
@@ -190,7 +192,7 @@ namespace VAssist.Services
         /// </summary>
         /// <param name="user">The <see cref="DiscordUser"/> to remove.</param>
         /// <param name="turnTracker">The Turn Tracker to modify.</param>
-        internal static void RemovePlayerCharacterFromTeams(DiscordUser user, TurnTrackerModel turnTracker)
+        private static void RemovePlayerCharacterFromTeams(DiscordUser user, TurnTrackerModel turnTracker)
         {
             for (int i = 0; i < turnTracker.Teams.Count; i++) // Remove the user from all other teams they may be apart of
             {
@@ -207,7 +209,7 @@ namespace VAssist.Services
         /// <param name="user">The <see cref="DiscordUser"/> to add,</param>
         /// <param name="turnTracker">The Turn Tracker to modify.</param>
         /// <param name="optionId">The Id of the interacting <see cref="DiscordSelectComponentOption"/> dropdown option.</param>
-        internal static void AddPlayerCharacterToTeam(DiscordUser user, TurnTrackerModel turnTracker, string optionId)
+        private static void AddPlayerCharacterToTeam(DiscordUser user, TurnTrackerModel turnTracker, string optionId)
         {
             int teamPos = Util.ParseInt(optionId); // get the position/index of the team the user wishes to choice
             var team = turnTracker.Teams[teamPos]; // grab the team
@@ -218,7 +220,8 @@ namespace VAssist.Services
                 PlayerID = user.Id,
                 ReactionsAvailable = 1,
                 ReactionsMax = 1,
-                TurnAvailable = true
+                TurnAvailable = true,
+                SelectedByDirector = false,
             });
         }
         /// <summary>
@@ -226,15 +229,22 @@ namespace VAssist.Services
         /// </summary>
         /// <param name="builder">The <see cref="DiscordEmbedBuilder"/> representation of the Turn Tracker to update.</param>
         /// <param name="turnTracker">The Turn Tracker to update from.</param>
-        internal static void UpdateTurnTrackerModel(DiscordEmbedBuilder builder, TurnTrackerModel turnTracker)
+        private static void UpdateTurnTrackerModel(DiscordEmbedBuilder builder, TurnTrackerModel turnTracker)
         {
-            foreach (var team in turnTracker.Teams) // Update the teams and characters with the updated values
+            // Update the teams and characters with the updated values
+            foreach (var team in turnTracker.Teams)
             {
-                var field = builder.Fields.Single(field => field.Name.Equals(team.TeamName));
-                field.Value = team.ToString();
+                var field_team = builder.Fields.Single(field => field.Name.Equals(team.TeamName));
+                field_team.Value = team.ToString();
             }
+
+            // Update selected characters
+            var selected = turnTracker.Teams.SelectMany(t => t.Characters).Where(c => c.SelectedByDirector);
+            var field_character = builder.Fields
+                .Last(f => f.Name.StartsWith(Resources.TurnTracker.DirectorCharactersFieldName)); // Director Character is after user named fields, so use Last
+            field_character.Value = string.Join('\n', selected.Select(c => c.ToString()));
         }
-        internal static DiscordWebhookBuilder UpdateTurnTracker(DiscordEmbedBuilder builder, TurnTrackerModel turnTracker)
+        private static DiscordWebhookBuilder UpdateTurnTracker(DiscordEmbedBuilder builder, TurnTrackerModel turnTracker)
         {
             UpdateTurnTrackerModel(builder, turnTracker);
             return new DiscordWebhookBuilder()

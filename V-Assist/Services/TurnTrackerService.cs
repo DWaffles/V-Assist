@@ -163,7 +163,8 @@ namespace VAssist.Services
                     PlayerID = null,
                     ReactionsAvailable = 1,
                     ReactionsMax = 1,
-                    TurnAvailable = true
+                    TurnAvailable = true,
+                    SelectedByDirector = false
                 });
             }
 

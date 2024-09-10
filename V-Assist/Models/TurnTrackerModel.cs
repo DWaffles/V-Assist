@@ -30,6 +30,7 @@ namespace VAssist.Trackers
         internal required int ReactionsAvailable { get; set; }
         internal required int ReactionsMax { get; set; }
         internal required bool TurnAvailable { get; set; }
+        internal required bool SelectedByDirector { get; set; }
         internal string? Mention()
         {
             return PlayerID == null ? null : $"<@{PlayerID}>";
