@@ -97,6 +97,24 @@ namespace VAssist.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove.
+        /// </summary>
+        internal static string ButtonRemoveLabel {
+            get {
+                return ResourceManager.GetString("ButtonRemoveLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strikethrough.
+        /// </summary>
+        internal static string ButtonStrikethroughLabel {
+            get {
+                return ResourceManager.GetString("ButtonStrikethroughLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Toggle Turn.
         /// </summary>
         internal static string ButtonToggleTurnLabel {
@@ -133,7 +151,7 @@ namespace VAssist.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Director Controlled Characters (Max 5).
+        ///   Looks up a localized string similar to Director Controlled Characters.
         /// </summary>
         internal static string DirectorCharactersFieldName {
             get {
@@ -273,6 +291,24 @@ namespace VAssist.Resources {
         internal static string TurnTrackerCurrentVersion {
             get {
                 return ResourceManager.GetString("TurnTrackerCurrentVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have a character for this Turn Tracker..
+        /// </summary>
+        internal static string UserNoCharacterMessage {
+            get {
+                return ResourceManager.GetString("UserNoCharacterMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are not the director and cannot modify selected characters..
+        /// </summary>
+        internal static string UserNotDirectorMessage {
+            get {
+                return ResourceManager.GetString("UserNotDirectorMessage", resourceCulture);
             }
         }
     }

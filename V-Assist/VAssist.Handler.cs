@@ -108,12 +108,11 @@ namespace VAssist
         internal async Task HandleTurnTrackerInteractionsAsync(DiscordClient client, ComponentInteractionCreatedEventArgs e)
         {
             var message = e.Message;
-            var embed = new DiscordEmbedBuilder(message.Embeds[0]);
             var service = (TurnTrackerService)Client.ServiceProvider.GetRequiredService(typeof(TurnTrackerService));
 
             switch (e.Id) // tts
             {
-                case "tts_dropdown_team_join":
+                case "tts_dropdown_team_join": // component ID for the dropdown field presenting teams
                     if (e.Values.Length == 0) // Check to see if the user has selected any dropdown options
                     {
                         var builder = new DiscordInteractionResponseBuilder()
@@ -137,43 +136,41 @@ namespace VAssist
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
                     break;
-                case "tts_dropdown_character_select":
-                    if (service.UserIsDirector(message, e.User)) // Check if user is director
+                case "tts_dropdown_character_select": // component id for the character selectiond drop down
+                    if (service.UserIsDirector(message, e.User)) // User is director wanting to select characters
                     {
                         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
                         var webhookBuilder = service.HandleCharacterSelection(message, e.Values);
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
-                    else
+                    else // User is not director
                     {
                         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
-                        string content = "You do not have a character for this Turn Tracker.";
+                        string content = Resources.TurnTracker.UserNotDirectorMessage;
                         await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
                     }
                     break;
                 case "tts_button_turn":
                     if (service.UserIsDirector(message, e.User)) // Check if user is director
                     {
-
+                        // Check Selected Characters
                     }
-                    else if (service.UserHasCharacter(message, e.User)) // Check if user is in a team //check controller status?
+                    else if (service.UserHasCharacter(message, e.User)) // User is character wanting to expend their turn
                     {
                         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
                         var webhookBuilder = service.HandlePlayerTurnToggle(message, e.User);
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
-                    else
+                    else // User does not have a character
                     {
                         await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
-                        string content = "You do not have a character for this Turn Tracker.";
+                        string content = Resources.TurnTracker.UserNoCharacterMessage;
                         await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
                     }
                     break;
                 case "tts_button_reaction_cycle":
                     goto case "tts_button_reaction_max";
                 case "tts_button_reaction_max":
-                    await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
-
                     //check controller status
                     if (service.UserIsDirector(message, e.User)) // Check if user is director
                     {
@@ -181,12 +178,14 @@ namespace VAssist
                     }
                     else if (service.UserHasCharacter(message, e.User)) // Check if user is in a team
                     {
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
                         var webhookBuilder = service.HandlePlayerReactionCycle(message, e.User, e.Id);
                         await e.Interaction.EditOriginalResponseAsync(webhookBuilder);
                     }
                     else
                     {
-                        string content = "You do not have a character for this Turn Tracker.";
+                        await e.Interaction.CreateResponseAsync(DiscordInteractionResponseType.DeferredMessageUpdate);
+                        string content = Resources.TurnTracker.UserNoCharacterMessage;
                         await e.Interaction.CreateFollowupMessageAsync(new() { Content = content, IsEphemeral = true });
                     }
                     break;

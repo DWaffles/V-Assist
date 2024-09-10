@@ -20,7 +20,7 @@ namespace VAssist.Trackers
             if (Characters.Count != 0)
                 return string.Join('\n', Characters.Select(character => character.ToString()));
             else
-                return "Empty";
+                return Resources.TurnTracker.TeamFieldValueDefault;
         }
     }
     internal class TurnTrackerCharacterModel

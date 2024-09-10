@@ -82,9 +82,7 @@ namespace VAssist.Services
             // 3rd : Controller Action Button Row
             // 4th : Director Action Button Row // Add NPC // Remove // Kill // Rename?
             // 5th : Selected Action Interaction Drop Down
-
             // Next Turn
-            // Mark incapabe = strike through
 
             var components = new List<DiscordActionRowComponent>()
             {

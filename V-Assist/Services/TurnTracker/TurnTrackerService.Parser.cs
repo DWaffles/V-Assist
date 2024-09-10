@@ -96,8 +96,8 @@ namespace VAssist.Services
                 PlayerID = mention
                     ? id
                     : null, // player ID
-                ReactionsAvailable = (int)reactions.First(),
-                ReactionsMax = (int)reactions.Last(),
+                ReactionsAvailable = reactions.First(),
+                ReactionsMax = reactions.Last(),
                 TurnAvailable = str.Contains(Green) || str.Contains(Blue),
                 SelectedByDirector = false,
             };

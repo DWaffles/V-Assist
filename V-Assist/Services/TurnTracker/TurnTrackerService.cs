@@ -34,6 +34,8 @@ namespace VAssist.Services
             new DiscordButtonComponent(style: DiscordButtonStyle.Success, customId: "tts_button_turn", label: Resources.TurnTracker.ButtonToggleTurnLabel, emoji: new DiscordComponentEmoji("🔃")),
             new DiscordButtonComponent(style: DiscordButtonStyle.Primary, customId: "tts_button_reaction_cycle", label: Resources.TurnTracker.ButtonReactionCycleLabel, emoji: new DiscordComponentEmoji("🔃")),
             new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "tts_button_reaction_max", label: Resources.TurnTracker.ButtonReactionMaxLabel, emoji: new DiscordComponentEmoji("🔃")),
+            new DiscordButtonComponent(style: DiscordButtonStyle.Secondary, customId: "tts_button_strikethrough", label: Resources.TurnTracker.ButtonStrikethroughLabel, emoji: new DiscordComponentEmoji("🏳️")),
+            new DiscordButtonComponent(style: DiscordButtonStyle.Danger, customId: "tts_button_remove", label: Resources.TurnTracker.ButtonRemoveLabel, emoji: new DiscordComponentEmoji("💀")),
         ];
         internal DiscordMessageBuilder GetNewTurnTracker(DiscordUser currentUser, DiscordUser director, int num_teams)
         {

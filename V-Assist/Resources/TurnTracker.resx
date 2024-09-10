@@ -129,6 +129,12 @@
   <data name="ButtonReactionMaxLabel" xml:space="preserve">
     <value>Cycle Max Reactions</value>
   </data>
+  <data name="ButtonRemoveLabel" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ButtonStrikethroughLabel" xml:space="preserve">
+    <value>Strikethrough</value>
+  </data>
   <data name="ButtonToggleTurnLabel" xml:space="preserve">
     <value>Toggle Turn</value>
   </data>
@@ -142,7 +148,7 @@
     <value>Not Assigned</value>
   </data>
   <data name="DirectorCharactersFieldName" xml:space="preserve">
-    <value>Director Controlled Characters (Max 5)</value>
+    <value>Director Controlled Characters</value>
   </data>
   <data name="DirectorCharactersFieldValueDefault" xml:space="preserve">
     <value>None Selected</value>
@@ -188,5 +194,11 @@
   </data>
   <data name="TurnTrackerCurrentVersion" xml:space="preserve">
     <value>TTS v0.1</value>
+  </data>
+  <data name="UserNoCharacterMessage" xml:space="preserve">
+    <value>You do not have a character for this Turn Tracker.</value>
+  </data>
+  <data name="UserNotDirectorMessage" xml:space="preserve">
+    <value>You are not the director and cannot modify selected characters.</value>
   </data>
 </root>
